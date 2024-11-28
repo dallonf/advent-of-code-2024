@@ -1,6 +1,6 @@
-import aoc2024.common.input as input
+import aoc2024.common.input as aoc_input
 
 if __name__ == "__main__":
-    puzzle_input = input.load_lines("day00input")
+    puzzle_input = aoc_input.load_lines("day00sample")
 
     print("result:", puzzle_input)
