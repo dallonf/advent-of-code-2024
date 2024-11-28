@@ -14,3 +14,7 @@ python = "^3.13"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pyright]
+include = ["aoc2024"]
+strict = ["aoc2024"]
