@@ -5,6 +5,7 @@ description = ""
 authors = ["Dallon Feldner <dallonfdev@gmail.com>"]
 readme = "README.md"
 package-mode = false
+packages = [{ include = "src" }]
 
 [tool.poetry.dependencies]
 python = "^3.13"
