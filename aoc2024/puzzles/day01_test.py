@@ -1,5 +1,5 @@
 from textwrap import dedent
-from aoc2024.puzzles.day01 import parse_lists
+from aoc2024.puzzles.day01 import get_distances, parse_lists, part_one_solution
 
 
 SAMPLE_INPUT = """\
@@ -28,3 +28,12 @@ def test_parse_lists_longer_numbers():
     result = parse_lists(input)
     assert result[0] == [123, 789]
     assert result[1] == [456, 101]
+
+
+def test_get_distances():
+    result = get_distances(parse_lists(SAMPLE_INPUT))
+    assert result == [2, 1, 0, 1, 2, 5]
+
+def test_part_one_solution():
+    result = part_one_solution(SAMPLE_INPUT)
+    assert result == 11
