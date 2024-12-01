@@ -1,3 +1,4 @@
+import itertools
 import aoc2024.common.input as aoc_input
 
 
@@ -36,6 +37,27 @@ def part_one_solution(input_data: str) -> int:
     return sum(distances)
 
 
+def get_similarities(lists: ListPair) -> list[int]:
+    sorted_right_list = lists[1].copy()
+    sorted_right_list.sort()
+    right_list_occurances: dict[int, int] = {}
+    for key, group in itertools.groupby(sorted_right_list):
+        right_list_occurances[key] = len(list(group))
+
+    result: list[int] = []
+    for x in lists[0]:
+        occurrances = right_list_occurances.get(x, 0)
+        result.append(x * occurrances)
+    return result
+
+
+def part_two_solution(input_data: str) -> int:
+    lists = parse_lists(input_data)
+    similarities = get_similarities(lists)
+    return sum(similarities)
+
+
 if __name__ == "__main__":
     puzzle_input = aoc_input.load("day01input")
-    print(part_one_solution(puzzle_input))
+    print("Part One:", part_one_solution(puzzle_input))
+    print("Part Two:", part_two_solution(puzzle_input))

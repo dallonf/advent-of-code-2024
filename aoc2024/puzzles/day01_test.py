@@ -1,5 +1,11 @@
 from textwrap import dedent
-from aoc2024.puzzles.day01 import get_distances, parse_lists, part_one_solution
+from aoc2024.puzzles.day01 import (
+    get_distances,
+    parse_lists,
+    part_one_solution,
+    get_similarities,
+    part_two_solution,
+)
 
 
 SAMPLE_INPUT = """\
@@ -34,6 +40,17 @@ def test_get_distances():
     result = get_distances(parse_lists(SAMPLE_INPUT))
     assert result == [2, 1, 0, 1, 2, 5]
 
+
 def test_part_one_solution():
     result = part_one_solution(SAMPLE_INPUT)
     assert result == 11
+
+
+def test_get_similarities():
+    result = get_similarities(parse_lists(SAMPLE_INPUT))
+    assert result == [9, 4, 0, 0, 9, 9]
+
+
+def test_part_two_solution():
+    result = part_two_solution(SAMPLE_INPUT)
+    assert result == 31
