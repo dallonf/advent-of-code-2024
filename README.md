@@ -15,8 +15,8 @@ poetry install
 Run a day's solution:
 
 ```sh
-# substitute 00 for acutal day number
-python -m aoc2024.puzzles.day00 
+# substitute 00 for actual day number
+python -m aoc2024.puzzles.day00
 ```
 
 Check types with Pyright:
@@ -35,4 +35,10 @@ Run tests in watch mode:
 
 ```sh
 ptw
+```
+
+Run tests in watch mode for a single day:
+
+```sh
+ptw -- aoc2024/puzzles/day00_test.py
 ```
