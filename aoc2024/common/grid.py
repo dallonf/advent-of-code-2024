@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum, auto
 from functools import cached_property
-from typing import Iterator, Self
+from typing import Iterator, Optional, Self
 
 
 class Direction(Enum):
@@ -22,13 +22,16 @@ class Direction(Enum):
                 return IntVector(1, 0)
 
 
-@dataclass
+@dataclass(frozen=True)
 class IntVector:
     x: int
     y: int
 
     def __add__(self, other: Self):
         return IntVector(self.x + other.x, self.y + other.y)
+
+    def __mul__(self, other: int):
+        return IntVector(self.x * other, self.y * other)
 
     @staticmethod
     def eight_directions() -> Iterator["IntVector"]:
@@ -99,6 +102,13 @@ class BasicGrid[T]:
     def __setitem__(self, key: IntVector.IntoIntVector, value: T):
         self.items[self.shape.array_index(IntVector.normalize_input(key))] = value
 
+    def get_if_in_bounds(self, key: IntVector.IntoIntVector) -> Optional[T]:
+        key = IntVector.normalize_input(key)
+        if self.shape.is_in_bounds(key):
+            return self[key]
+        else:
+            return None
+
     @staticmethod
     def parse_char_grid(lines: list[str]) -> "BasicGrid[str]":
         expected_width = len(lines[0])
@@ -115,3 +125,6 @@ class BasicGrid[T]:
             end = self.shape.array_index(IntVector(0, y + 1))
             lines.append("".join(self.items[start:end]))
         return "\n".join(lines)
+
+    def copy(self) -> "BasicGrid[T]":
+        return BasicGrid(self.items.copy(), self.width)
