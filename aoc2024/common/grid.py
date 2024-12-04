@@ -34,15 +34,23 @@ class IntVector:
         return IntVector(self.x * other, self.y * other)
 
     @staticmethod
-    def eight_directions() -> Iterator["IntVector"]:
+    def cardinal_directions() -> Iterator["IntVector"]:
         yield IntVector(0, -1)
-        yield IntVector(1, -1)
         yield IntVector(1, 0)
-        yield IntVector(1, 1)
         yield IntVector(0, 1)
-        yield IntVector(-1, 1)
         yield IntVector(-1, 0)
+
+    @staticmethod
+    def diagonal_directions() -> Iterator["IntVector"]:
+        yield IntVector(1, -1)
+        yield IntVector(1, 1)
+        yield IntVector(-1, 1)
         yield IntVector(-1, -1)
+
+    @staticmethod
+    def eight_directions() -> Iterator["IntVector"]:
+        yield from IntVector.cardinal_directions()
+        yield from IntVector.diagonal_directions()
 
     type IntoIntVector = IntVector | tuple[int, int]
 
