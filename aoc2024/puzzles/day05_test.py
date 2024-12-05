@@ -16,3 +16,25 @@ class TestPuzzleInput:
         assert result.updates[0] == Update([75, 47, 61, 53, 29])
         assert result.updates[1] == Update([97, 61, 53, 29, 13])
         assert result.updates[2] == Update([75, 29, 13])
+
+    def test_part_one_answer(self):
+        puzzle_input = PuzzleInput.parse(SAMPLE_INPUT)
+        assert puzzle_input.part_one_answer() == 143
+
+
+class TestUpdate:
+    def test_is_valid(self):
+        puzzle_input = PuzzleInput.parse(SAMPLE_INPUT)
+        assert puzzle_input.ruleset.check_compliance(puzzle_input.updates[0]) == True
+        assert puzzle_input.ruleset.check_compliance(puzzle_input.updates[1]) == True
+        assert puzzle_input.ruleset.check_compliance(puzzle_input.updates[2]) == True
+        assert puzzle_input.ruleset.check_compliance(puzzle_input.updates[3]) == False
+        assert puzzle_input.ruleset.check_compliance(puzzle_input.updates[4]) == False
+        assert puzzle_input.ruleset.check_compliance(puzzle_input.updates[5]) == False
+
+    def test_middle_page(self):
+        puzzle_input = PuzzleInput.parse(SAMPLE_INPUT)
+        updates = puzzle_input.updates
+        assert updates[0].middle_page == 61
+        assert updates[1].middle_page == 53
+        assert updates[2].middle_page == 29
