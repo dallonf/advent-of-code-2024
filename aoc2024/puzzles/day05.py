@@ -52,6 +52,30 @@ class Update:
         ), f"Update has {len(self.pages)} pages; can only get the middle page for an odd number"
         return self.pages[len(self.pages) // 2]
 
+    def reorder(self, ruleset: Ruleset) -> "Update":
+        relevant_rules: list[OrderRule] = [
+            r for r in ruleset.rules if r.is_relevant(self)
+        ]
+        old_pages = set(self.pages)
+        new_pages: list[int] = []
+        while len(relevant_rules) > 0:
+            plausible_next_rules = (
+                before_rule
+                for before_rule in relevant_rules
+                if not any(
+                    before_rule.before == after_rule for after_rule in relevant_rules
+                )
+            )
+            print("plausible_next_rules", list(plausible_next_rules))
+            next_page: int = next(plausible_next_rules).before
+            new_pages.append(next_page)
+            relevant_rules = [r for r in relevant_rules if r.before != next_page]
+
+        old_pages = old_pages.difference(new_pages)
+        new_pages += old_pages
+
+        return Update(new_pages)
+
 
 @dataclass(frozen=True, eq=True)
 class PuzzleInput:

@@ -1,3 +1,4 @@
+from pytest import skip
 from .day05 import OrderRule, PuzzleInput, Update
 import aoc2024.common.input as aoc_input
 
@@ -38,3 +39,14 @@ class TestUpdate:
         assert updates[0].middle_page == 61
         assert updates[1].middle_page == 53
         assert updates[2].middle_page == 29
+
+    def test_reorder(self):
+        skip("not currently working")
+        ruleset = PuzzleInput.parse(SAMPLE_INPUT).ruleset
+        assert Update([75, 97, 47, 61, 53]).reorder(ruleset) == Update(
+            [97, 75, 47, 61, 53]
+        )
+        assert Update([61, 13, 29]).reorder(ruleset) == Update([61, 29, 13])
+        assert Update([97, 13, 75, 29, 47]).reorder(ruleset) == Update(
+            [97, 75, 47, 29, 13]
+        )
