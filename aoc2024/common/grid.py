@@ -21,6 +21,28 @@ class Direction(Enum):
             case Direction.RIGHT:
                 return IntVector(1, 0)
 
+    def clockwise(self):
+        match self:
+            case Direction.UP:
+                return Direction.RIGHT
+            case Direction.RIGHT:
+                return Direction.DOWN
+            case Direction.DOWN:
+                return Direction.LEFT
+            case Direction.LEFT:
+                return Direction.UP
+
+    def counter_clockwise(self):
+        match self:
+            case Direction.UP:
+                return Direction.LEFT
+            case Direction.LEFT:
+                return Direction.DOWN
+            case Direction.DOWN:
+                return Direction.RIGHT
+            case Direction.RIGHT:
+                return Direction.UP
+
 
 @dataclass(frozen=True)
 class IntVector:
@@ -136,3 +158,7 @@ class BasicGrid[T]:
 
     def copy(self) -> "BasicGrid[T]":
         return BasicGrid(self.items.copy(), self.width)
+
+    def all_items(self) -> Iterator[tuple[IntVector, T]]:
+        for coord in self.shape.all_coords():
+            yield (coord, self[coord])
