@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from functools import cached_property
+from functools import cache, cached_property
 import re
 import aoc2024.common.input as aoc_input
 
@@ -56,23 +56,25 @@ class Update:
         relevant_rules: list[OrderRule] = [
             r for r in ruleset.rules if r.is_relevant(self)
         ]
-        old_pages = set(self.pages)
-        new_pages: list[int] = []
-        while len(relevant_rules) > 0:
-            plausible_next_rules = (
-                before_rule
-                for before_rule in relevant_rules
-                if not any(
-                    before_rule.before == after_rule for after_rule in relevant_rules
-                )
-            )
-            print("plausible_next_rules", list(plausible_next_rules))
-            next_page: int = next(plausible_next_rules).before
-            new_pages.append(next_page)
-            relevant_rules = [r for r in relevant_rules if r.before != next_page]
 
-        old_pages = old_pages.difference(new_pages)
-        new_pages += old_pages
+        @cache
+        def get_all_prerequisites(page: int) -> set[int]:
+            result: set[int] = set()
+            for rule in relevant_rules:
+                if rule.after == page:
+                    result.add(rule.before)
+                    result = result.union(get_all_prerequisites(rule.before))
+            return result
+
+        new_pages: list[int] = []
+        while len(new_pages) < len(self.pages):
+            plausible_next_items = [
+                page
+                for page in self.pages
+                if page not in new_pages
+                and len(get_all_prerequisites(page).difference(new_pages)) == 0
+            ]
+            new_pages.append(plausible_next_items[0])
 
         return Update(new_pages)
 
@@ -99,7 +101,15 @@ class PuzzleInput:
         ]
         return sum((u.middle_page for u in compliant_updates))
 
+    def part_two_answer(self):
+        incorrectly_ordered_updates = [
+            u for u in self.updates if not self.ruleset.check_compliance(u)
+        ]
+        fixed_updates = [u.reorder(self.ruleset) for u in incorrectly_ordered_updates]
+        return sum(u.middle_page for u in fixed_updates)
+
 
 if __name__ == "__main__":
     puzzle_input = PuzzleInput.parse(aoc_input.load_lines("day05input"))
     print("Part One:", puzzle_input.part_one_answer())
+    print("Part Two:", puzzle_input.part_two_answer())
