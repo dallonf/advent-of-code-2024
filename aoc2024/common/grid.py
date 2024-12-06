@@ -93,6 +93,9 @@ class GridShape:
         "Does not support a negative coord"
         return coord.y * self.width + coord.x
 
+    def array_size(self) -> int:
+        return self.width * self.height
+
     def coordinate_for_index(self, index: int) -> IntVector2:
         return IntVector2((index % self.width), index // self.width)
 

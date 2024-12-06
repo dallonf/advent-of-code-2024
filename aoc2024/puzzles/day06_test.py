@@ -33,3 +33,18 @@ def test_possible_looping_obstructions():
     guard_map = GuardMap.parse(SAMPLE_INPUT)
     result = guard_map.get_possible_looping_obstructions()
     assert len(result) == 6
+
+    for r in result:
+        map_with_obstacle = guard_map.with_new_obstacle(r)
+        print(f"obstacle at {r}")
+        print(map_with_obstacle.get_path().debug(map_with_obstacle, new_obstacle=r))
+
+    expected_results = {
+        IntVector2(3, 6),
+        IntVector2(6, 7),
+        IntVector2(7, 7),
+        IntVector2(1, 8),
+        IntVector2(3, 8),
+        IntVector2(7, 9),
+    }
+    assert set(result) == expected_results
