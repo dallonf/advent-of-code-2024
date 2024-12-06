@@ -1,18 +1,18 @@
 from dataclasses import dataclass
-from aoc2024.common.grid import BasicGrid, Direction, GridShape, IntVector
+from aoc2024.common.grid import BasicGrid, Direction, GridShape, IntVector2
 import aoc2024.common.input as aoc_input
 
 
 @dataclass
 class GuardMap:
     shape: GridShape
-    obstacles: set[IntVector]
-    starting_position: IntVector
+    obstacles: set[IntVector2]
+    starting_position: IntVector2
 
     @staticmethod
     def parse(lines: list[str]):
         basic = BasicGrid.parse_char_grid(lines)
-        obstacles = set[IntVector]()
+        obstacles = set[IntVector2]()
         starting_position = None
         for coord, entry in basic.all_items():
             if entry == "#":
@@ -25,7 +25,7 @@ class GuardMap:
         )
 
     def get_covered_positions(self):
-        result = set[IntVector]()
+        result = set[IntVector2]()
         direction = Direction.UP
         position = self.starting_position
 

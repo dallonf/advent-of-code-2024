@@ -1,5 +1,5 @@
 from textwrap import dedent
-from aoc2024.common.grid import BasicGrid, IntVector
+from aoc2024.common.grid import BasicGrid, IntVector2
 import aoc2024.common.input as aoc_input
 from .day04 import find_xmases, part_one_answer, find_cross_mases, part_two_answer
 
@@ -13,7 +13,7 @@ def test_find_xmases_count():
 
 
 def test_find_xmases_grid():
-    affected_coords = set[IntVector]()
+    affected_coords = set[IntVector2]()
     xmases = find_xmases(SAMPLE_GRID)
     for xmas in xmases:
         for i in range(4):
@@ -46,11 +46,11 @@ def test_part_one_answer():
 
 
 def test_find_cross_mases():
-    affected_coords = set[IntVector]()
+    affected_coords = set[IntVector2]()
     results = find_cross_mases(SAMPLE_GRID)
     for result in results:
         affected_coords.add(result)
-        for diagonal in IntVector.diagonal_directions():
+        for diagonal in IntVector2.diagonal_directions():
             affected_coords.add(result + diagonal)
 
     debug_grid = SAMPLE_GRID.copy()

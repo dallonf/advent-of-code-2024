@@ -13,13 +13,13 @@ class Direction(Enum):
     def to_vector(self):
         match self:
             case Direction.UP:
-                return IntVector(0, -1)
+                return IntVector2(0, -1)
             case Direction.DOWN:
-                return IntVector(0, 1)
+                return IntVector2(0, 1)
             case Direction.LEFT:
-                return IntVector(-1, 0)
+                return IntVector2(-1, 0)
             case Direction.RIGHT:
-                return IntVector(1, 0)
+                return IntVector2(1, 0)
 
     def clockwise(self):
         match self:
@@ -45,43 +45,43 @@ class Direction(Enum):
 
 
 @dataclass(frozen=True)
-class IntVector:
+class IntVector2:
     x: int
     y: int
 
     def __add__(self, other: Self):
-        return IntVector(self.x + other.x, self.y + other.y)
+        return IntVector2(self.x + other.x, self.y + other.y)
 
     def __mul__(self, other: int):
-        return IntVector(self.x * other, self.y * other)
+        return IntVector2(self.x * other, self.y * other)
 
     @staticmethod
-    def cardinal_directions() -> Iterator["IntVector"]:
-        yield IntVector(0, -1)
-        yield IntVector(1, 0)
-        yield IntVector(0, 1)
-        yield IntVector(-1, 0)
+    def cardinal_directions() -> Iterator["IntVector2"]:
+        yield IntVector2(0, -1)
+        yield IntVector2(1, 0)
+        yield IntVector2(0, 1)
+        yield IntVector2(-1, 0)
 
     @staticmethod
-    def diagonal_directions() -> Iterator["IntVector"]:
-        yield IntVector(1, -1)
-        yield IntVector(1, 1)
-        yield IntVector(-1, 1)
-        yield IntVector(-1, -1)
+    def diagonal_directions() -> Iterator["IntVector2"]:
+        yield IntVector2(1, -1)
+        yield IntVector2(1, 1)
+        yield IntVector2(-1, 1)
+        yield IntVector2(-1, -1)
 
     @staticmethod
-    def eight_directions() -> Iterator["IntVector"]:
-        yield from IntVector.cardinal_directions()
-        yield from IntVector.diagonal_directions()
+    def eight_directions() -> Iterator["IntVector2"]:
+        yield from IntVector2.cardinal_directions()
+        yield from IntVector2.diagonal_directions()
 
-    type IntoIntVector = IntVector | tuple[int, int]
+    type IntoIntVector = IntVector2 | tuple[int, int]
 
     @staticmethod
-    def normalize_input(x: IntoIntVector) -> "IntVector":
-        if isinstance(x, IntVector):
+    def normalize_input(x: IntoIntVector) -> "IntVector2":
+        if isinstance(x, IntVector2):
             return x
         else:
-            return IntVector(x[0], x[1])
+            return IntVector2(x[0], x[1])
 
 
 @dataclass
@@ -89,19 +89,19 @@ class GridShape:
     width: int
     height: int
 
-    def array_index(self, coord: IntVector) -> int:
+    def array_index(self, coord: IntVector2) -> int:
         "Does not support a negative coord"
         return coord.y * self.width + coord.x
 
-    def coordinate_for_index(self, index: int) -> IntVector:
-        return IntVector((index % self.width), index // self.width)
+    def coordinate_for_index(self, index: int) -> IntVector2:
+        return IntVector2((index % self.width), index // self.width)
 
-    def all_coords(self) -> Iterator[IntVector]:
+    def all_coords(self) -> Iterator[IntVector2]:
         for y in range(self.height):
             for x in range(self.width):
-                yield IntVector(x, y)
+                yield IntVector2(x, y)
 
-    def is_in_bounds(self, coord: IntVector) -> bool:
+    def is_in_bounds(self, coord: IntVector2) -> bool:
         return (
             coord.x >= 0
             and coord.y >= 0
@@ -126,14 +126,14 @@ class BasicGrid[T]:
     def shape(self) -> GridShape:
         return GridShape(self.width, len(self.items) // self.width)
 
-    def __getitem__(self, key: IntVector.IntoIntVector) -> T:
-        return self.items[self.shape.array_index(IntVector.normalize_input(key))]
+    def __getitem__(self, key: IntVector2.IntoIntVector) -> T:
+        return self.items[self.shape.array_index(IntVector2.normalize_input(key))]
 
-    def __setitem__(self, key: IntVector.IntoIntVector, value: T):
-        self.items[self.shape.array_index(IntVector.normalize_input(key))] = value
+    def __setitem__(self, key: IntVector2.IntoIntVector, value: T):
+        self.items[self.shape.array_index(IntVector2.normalize_input(key))] = value
 
-    def get_if_in_bounds(self, key: IntVector.IntoIntVector) -> Optional[T]:
-        key = IntVector.normalize_input(key)
+    def get_if_in_bounds(self, key: IntVector2.IntoIntVector) -> Optional[T]:
+        key = IntVector2.normalize_input(key)
         if self.shape.is_in_bounds(key):
             return self[key]
         else:
@@ -151,14 +151,14 @@ class BasicGrid[T]:
     def format_char_grid(self: "BasicGrid[str]") -> str:
         lines: list[str] = []
         for y in range(self.shape.height):
-            start = self.shape.array_index(IntVector(0, y))
-            end = self.shape.array_index(IntVector(0, y + 1))
+            start = self.shape.array_index(IntVector2(0, y))
+            end = self.shape.array_index(IntVector2(0, y + 1))
             lines.append("".join(self.items[start:end]))
         return "\n".join(lines)
 
     def copy(self) -> "BasicGrid[T]":
         return BasicGrid(self.items.copy(), self.width)
 
-    def all_items(self) -> Iterator[tuple[IntVector, T]]:
+    def all_items(self) -> Iterator[tuple[IntVector2, T]]:
         for coord in self.shape.all_coords():
             yield (coord, self[coord])

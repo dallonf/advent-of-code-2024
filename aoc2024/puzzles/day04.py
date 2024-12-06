@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 from typing import cast
-from aoc2024.common.grid import BasicGrid, IntVector
+from aoc2024.common.grid import BasicGrid, IntVector2
 import aoc2024.common.input as aoc_input
 
 
 @dataclass
 class FoundXmas:
     "coord is the coordinate of the X letter"
-    coord: IntVector
-    direction: IntVector
+    coord: IntVector2
+    direction: IntVector2
 
 
 def find_xmases(grid: BasicGrid[str]) -> list[FoundXmas]:
@@ -16,7 +16,7 @@ def find_xmases(grid: BasicGrid[str]) -> list[FoundXmas]:
     for coord in grid.shape.all_coords():
         # from any X, check for a "MAS" extending in any direction
         if grid[coord] == "X":
-            for direction in IntVector.eight_directions():
+            for direction in IntVector2.eight_directions():
                 if (
                     grid.get_if_in_bounds(coord + direction) == "M"
                     and grid.get_if_in_bounds(coord + direction * 2) == "A"
@@ -32,19 +32,19 @@ def part_one_answer(lines: list[str]) -> int:
     return len(xmases)
 
 
-def find_cross_mases(grid: BasicGrid[str]) -> list[IntVector]:
-    result: list[IntVector] = []
+def find_cross_mases(grid: BasicGrid[str]) -> list[IntVector2]:
+    result: list[IntVector2] = []
     for coord in grid.shape.all_coords():
         if grid[coord] == "A":
             # we're expecting both diagnonals to form a MAS, forward or backward.
             diagonals = [
                 [
-                    grid.get_if_in_bounds(coord + IntVector(-1, -1)),
-                    grid.get_if_in_bounds(coord + IntVector(1, 1)),
+                    grid.get_if_in_bounds(coord + IntVector2(-1, -1)),
+                    grid.get_if_in_bounds(coord + IntVector2(1, 1)),
                 ],
                 [
-                    grid.get_if_in_bounds(coord + IntVector(1, -1)),
-                    grid.get_if_in_bounds(coord + IntVector(-1, 1)),
+                    grid.get_if_in_bounds(coord + IntVector2(1, -1)),
+                    grid.get_if_in_bounds(coord + IntVector2(-1, 1)),
                 ],
             ]
 
