@@ -1,6 +1,6 @@
 from textwrap import dedent
 import aoc2024.common.input as aoc_input
-from .day07 import Equation, part_one_answer
+from .day07 import Equation, concat_numbers, part_one_answer, part_two_answer
 
 SAMPLE_INPUT = aoc_input.lines(
     dedent(
@@ -35,3 +35,20 @@ def test_can_be_valid():
 def test_part_one_answer():
     result = part_one_answer(SAMPLE_INPUT)
     assert result == 3749
+
+
+def test_complex_can_be_valid():
+    assert Equation.parse("156: 15 6").can_be_valid_complex()
+    assert Equation.parse("7290: 6 8 6 15").can_be_valid_complex()
+    assert Equation.parse("192: 17 8 14").can_be_valid_complex()
+    assert not Equation.parse("83: 17 5").can_be_valid_complex()
+    assert not Equation.parse("161011: 16 10 13").can_be_valid_complex()
+
+
+def test_concat_numbers():
+    assert concat_numbers(12, 34) == 1234
+
+
+def test_part_two_answer():
+    result = part_two_answer(SAMPLE_INPUT)
+    assert result == 11387
