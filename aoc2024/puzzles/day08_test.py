@@ -1,7 +1,7 @@
 from textwrap import dedent
 from aoc2024.common.grid import IntVector2
 import aoc2024.common.input as aoc_input
-from .day08 import AntennaGrid
+from .day08 import AntennaGrid, AntinodeType
 
 SAMPLE_INPUT = aoc_input.load_lines("day08sample")
 
@@ -72,3 +72,25 @@ def test_complex():
 def test_part_one_answer():
     grid = AntennaGrid.parse(SAMPLE_INPUT)
     assert grid.part_one_answer() == 14
+
+
+def test_resonant_antinodes():
+    expected = dedent(
+        """
+        ##....#....#
+        .#.#....0...
+        ..#.#0....#.
+        ..##...0....
+        ....0....#..
+        .#...#A....#
+        ...#..#.....
+        #....#.#....
+        ..#.....A...
+        ....#....A..
+        .#........#.
+        ...#......##
+        """
+    ).strip()
+    sample_input = expected.replace("#", ".")
+    grid = AntennaGrid.parse(aoc_input.lines(sample_input))
+    assert grid.debug_antinodes(type=AntinodeType.Resonant) == expected
