@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum, auto
 from functools import cached_property
-from typing import Iterator, Optional, Self
+from typing import Callable, Iterator, Optional, Self
 
 
 class Direction(Enum):
@@ -51,6 +51,9 @@ class IntVector2:
 
     def __add__(self, other: Self):
         return IntVector2(self.x + other.x, self.y + other.y)
+
+    def __sub__(self, other: Self):
+        return IntVector2(self.x - other.x, self.y - other.y)
 
     def __mul__(self, other: int):
         return IntVector2(self.x * other, self.y * other)
@@ -150,6 +153,17 @@ class BasicGrid[T]:
             assert len(line) == expected_width, f"mismatched width for line {i}"
             items += list(line)
         return BasicGrid(items, expected_width)
+
+    def map[
+        Output
+    ](self, func: Callable[[IntVector2, T], Output]) -> "BasicGrid[Output]":
+        new_list = list(
+            map(
+                lambda x: func(self.shape.coordinate_for_index(x[0]), x[1]),
+                enumerate(self.items),
+            )
+        )
+        return BasicGrid(new_list, self.width)
 
     def format_char_grid(self: "BasicGrid[str]") -> str:
         lines: list[str] = []
