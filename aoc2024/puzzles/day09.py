@@ -48,11 +48,17 @@ class FileSystem:
         for idx, file_id in reversed(list(enumerate(blocks))):
             if file_id == None:
                 continue
+            if first_available_space > idx:
+                # TODO: I've never been able to find a small test case
+                # where this gets hit, but it's absolutely essential for
+                # real input
+                break
+
             blocks[first_available_space] = file_id
             blocks[idx] = None
             try:
                 first_available_space = blocks.index(
-                    None, first_available_space, idx - 1
+                    None, first_available_space + 1, idx - 1
                 )
             except ValueError:
                 # done; no more free space
@@ -70,5 +76,4 @@ def part_one_answer(line: str):
 
 if __name__ == "__main__":
     puzzle_input = aoc_input.load("day09input").rstrip()
-    # too high: 6337367227720
     print("Part One:", part_one_answer(puzzle_input))

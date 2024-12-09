@@ -22,6 +22,11 @@ class TestFileSystem:
         file_system.defrag()
         assert file_system.debug() == "000000000111111111222222222"
 
+        file_system = FileSystem.parse("25441")
+        assert file_system.debug() == "00.....1111....2"
+        file_system.defrag()
+        assert file_system.debug() == "0021111........."
+
     def test_checksum(self):
         file_system = FileSystem.parse("2333133121414131402")
         file_system.defrag()
@@ -37,4 +42,6 @@ def test_edge_cases():
     assert part_one_answer("1010101010101010101010") == 385
     assert part_one_answer("12345") == 60
     assert part_one_answer("252") == 5
-    assert part_one_answer("90909") == FileSystem.parse("90909").checksum() # nothing to defrag here
+    assert (
+        part_one_answer("90909") == FileSystem.parse("90909").checksum()
+    )  # nothing to defrag here
