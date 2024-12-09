@@ -38,12 +38,12 @@ class FileSystem:
         chars = ["." if b == None else str(b) for b in self.blocks]
         return " ".join(chars)
 
-    def defrag(self):
+    def compact(self):
         blocks = self.blocks
         try:
             first_available_space = blocks.index(None)
         except ValueError:
-            # no free space, can't defrag
+            # no free space, can't compact
             return
         for idx, file_id in reversed(list(enumerate(blocks))):
             if file_id == None:
@@ -70,7 +70,7 @@ class FileSystem:
 
 def part_one_answer(line: str):
     filesystem = FileSystem.parse(line)
-    filesystem.defrag()
+    filesystem.compact()
     return filesystem.checksum()
 
 

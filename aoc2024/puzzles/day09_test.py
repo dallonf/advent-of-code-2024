@@ -9,27 +9,27 @@ class TestFileSystem:
             == "00...111...2...333.44.5555.6666.777.888899"
         )
 
-    def test_defrag(self):
+    def test_compact(self):
         file_system = FileSystem.parse("12345")
-        file_system.defrag()
+        file_system.compact()
         assert file_system.debug() == "022111222......"
 
         file_system = FileSystem.parse("2333133121414131402")
-        file_system.defrag()
+        file_system.compact()
         assert file_system.debug() == "0099811188827773336446555566.............."
 
         file_system = FileSystem.parse("90909")
-        file_system.defrag()
+        file_system.compact()
         assert file_system.debug() == "000000000111111111222222222"
 
         file_system = FileSystem.parse("25441")
         assert file_system.debug() == "00.....1111....2"
-        file_system.defrag()
+        file_system.compact()
         assert file_system.debug() == "0021111........."
 
     def test_checksum(self):
         file_system = FileSystem.parse("2333133121414131402")
-        file_system.defrag()
+        file_system.compact()
         assert file_system.checksum() == 1928
 
 
@@ -44,4 +44,4 @@ def test_edge_cases():
     assert part_one_answer("252") == 5
     assert (
         part_one_answer("90909") == FileSystem.parse("90909").checksum()
-    )  # nothing to defrag here
+    )  # nothing to compact here
