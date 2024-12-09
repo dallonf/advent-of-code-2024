@@ -1,4 +1,4 @@
-from .day09 import FileSystem
+from .day09 import FileSystem, part_one_answer
 
 
 class TestFileSystem:
@@ -22,3 +22,13 @@ class TestFileSystem:
         file_system = FileSystem.parse("2333133121414131402")
         file_system.defrag()
         assert file_system.checksum() == 1928
+
+
+def test_part_one_answer():
+    result = part_one_answer("2333133121414131402")
+    assert result == 1928
+
+
+def test_edge_cases():
+    assert part_one_answer("1010101010101010101010") == 385
+    assert part_one_answer("12345") == 60

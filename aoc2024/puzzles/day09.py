@@ -40,11 +40,14 @@ class FileSystem:
 
     def defrag(self):
         blocks = self.blocks
-        first_available_space = blocks.index(None)
+        try:
+            first_available_space = blocks.index(None)
+        except ValueError:
+            # no free space, can't defrag
+            return
         for idx, file_id in reversed(list(enumerate(blocks))):
             if file_id == None:
                 continue
-            assert blocks[first_available_space] == None
             blocks[first_available_space] = file_id
             blocks[idx] = None
             try:
@@ -52,7 +55,7 @@ class FileSystem:
                     None, first_available_space, idx - 1
                 )
             except ValueError:
-                # done
+                # done; no more free space
                 break
 
     def checksum(self):
