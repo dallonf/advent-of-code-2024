@@ -1,4 +1,5 @@
 from collections import deque
+from functools import lru_cache
 from aoc2024.common.grid import BasicGrid, IntVector2
 import aoc2024.common.input as aoc_input
 
@@ -49,6 +50,22 @@ class TopoMap:
                     result.append((coord, score))
         return result
 
+    @lru_cache(maxsize=2500)
+    def get_rating(self, coord: IntVector2) -> int:
+        height = self.grid.get_if_in_bounds(coord)
+        if height is None:
+            return 0
+        if height == 9:
+            return 1
+
+        next_height = height + 1
+        neighbors = (coord + d for d in IntVector2.cardinal_directions())
+        eligible_neighbors = [
+            n for n in neighbors if self.grid.get_if_in_bounds(n) == next_height
+        ]
+
+        return sum(self.get_rating(n) for n in eligible_neighbors)
+
 
 def part_one_answer(lines: list[str]) -> int:
     topomap = TopoMap.parse(lines)
@@ -56,6 +73,16 @@ def part_one_answer(lines: list[str]) -> int:
     return sum(score for _, score in trailheads)
 
 
+def part_two_answer(lines: list[str]) -> int:
+    topomap = TopoMap.parse(lines)
+    result = 0
+    for coord, val in topomap.grid.all_items():
+        if val == 0:
+            result += topomap.get_rating(coord)
+    return result
+
+
 if __name__ == "__main__":
     puzzle_input = aoc_input.load_lines("day10input")
     print("Part One:", part_one_answer(puzzle_input))
+    print("Part Two:", part_two_answer(puzzle_input))

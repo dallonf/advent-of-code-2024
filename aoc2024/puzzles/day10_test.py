@@ -1,7 +1,7 @@
 from textwrap import dedent
 from aoc2024.common.grid import IntVector2
 import aoc2024.common.input as aoc_input
-from .day10 import TopoMap, part_one_answer
+from .day10 import TopoMap, part_one_answer, part_two_answer
 
 SAMPLE_INPUT = aoc_input.load_lines("day10sample")
 
@@ -62,3 +62,42 @@ def test_score_all_trailheads():
 
 def test_part_one_answer():
     assert part_one_answer(SAMPLE_INPUT) == 36
+
+
+def test_trailhead_rating():
+    sample_input = aoc_input.lines(
+        dedent(
+            """
+            .....0.
+            ..4321.
+            ..5..2.
+            ..6543.
+            ..7..4.
+            ..8765.
+            ..9....
+            """
+        )
+    )
+    topomap = TopoMap.parse(sample_input)
+    assert topomap.get_rating(IntVector2(5, 0)) == 3
+
+    sample_input = aoc_input.lines(
+        dedent(
+            """
+            ..90..9
+            ...1.98
+            ...2..7
+            6543456
+            765.987
+            876....
+            987....
+
+            """
+        )
+    )
+    topomap = TopoMap.parse(sample_input)
+    assert topomap.get_rating(IntVector2(3, 0)) == 13
+
+
+def test_part_two_answer():
+    assert part_two_answer(SAMPLE_INPUT) == 81
