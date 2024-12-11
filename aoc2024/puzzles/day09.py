@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import itertools
 import aoc2024.common.input as aoc_input
 
@@ -68,8 +68,79 @@ class FileSystem:
         return sum((b * i for i, b in enumerate(self.blocks) if b != None))
 
 
+@dataclass(eq=True, frozen=True)
+class File:
+    position: int
+    id: int
+    size: int
+
+
+class FileSystemStructural:
+    "Maintains whole files"
+
+    # must remain sorted by position
+    _files: list[File]
+
+    def __init__(self, files: list[File]):
+        files = files.copy()
+        files.sort(key=lambda x: x.position)
+        self._files = files
+
+    @staticmethod
+    def parse(line: str):
+        char_pairs = itertools.batched(line, 2, strict=False)
+        files = list[File]()
+        current_position = 0
+        for i, pair in enumerate(char_pairs):
+            size = int(pair[0])
+            if len(pair) == 2:
+                free_space = int(pair[1])
+            else:
+                free_space = 0
+            files.append(File(current_position, i, size))
+            current_position += size
+            current_position += free_space
+        return FileSystemStructural(files)
+
+    def checksum(self):
+        result = 0
+        for file in self._files:
+            positions = (x + file.position for x in range(file.size))
+            for p in positions:
+                result += p * file.id
+
+        return result
+
+    def compact(self):
+        starting_files = self._files.copy()
+        for file in reversed(starting_files):
+            for candidate_i, after_candidate_file in enumerate(self._files):
+                # not handled edge case: won't check for free space before the first file
+                if after_candidate_file.position >= file.position:
+                    break
+                next_file = self._files[candidate_i + 1]
+                free_space = next_file.position - (
+                    after_candidate_file.position + after_candidate_file.size
+                )
+                if free_space >= file.size:
+                    self._files.remove(file)
+                    new_file = replace(
+                        file,
+                        position=after_candidate_file.position
+                        + after_candidate_file.size,
+                    )
+                    self._files.insert(candidate_i + 1, new_file)
+                    break
+
+
 def part_one_answer(line: str):
     filesystem = FileSystem.parse(line)
+    filesystem.compact()
+    return filesystem.checksum()
+
+
+def part_two_answer(line: str):
+    filesystem = FileSystemStructural.parse(line)
     filesystem.compact()
     return filesystem.checksum()
 
@@ -77,3 +148,4 @@ def part_one_answer(line: str):
 if __name__ == "__main__":
     puzzle_input = aoc_input.load("day09input").rstrip()
     print("Part One:", part_one_answer(puzzle_input))
+    print("Part Two:", part_two_answer(puzzle_input))

@@ -1,4 +1,4 @@
-from .day09 import FileSystem, part_one_answer
+from .day09 import FileSystem, FileSystemStructural, part_one_answer
 
 
 class TestFileSystem:
@@ -45,3 +45,20 @@ def test_edge_cases():
     assert (
         part_one_answer("90909") == FileSystem.parse("90909").checksum()
     )  # nothing to compact here
+
+
+class TestFileSystemStructural:
+    def test_parse_and_checksum(self):
+        assert (
+            FileSystemStructural.parse("12345").checksum()
+            == FileSystem.parse("12345").checksum()
+        )
+        assert (
+            FileSystemStructural.parse("2333133121414131402").checksum()
+            == FileSystem.parse("2333133121414131402").checksum()
+        )
+    
+    def test_compact(self):
+        file_system = FileSystemStructural.parse("2333133121414131402")
+        file_system.compact()
+        assert file_system.checksum() == 2858
