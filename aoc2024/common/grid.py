@@ -65,6 +65,9 @@ class IntVector2:
         yield IntVector2(0, 1)
         yield IntVector2(-1, 0)
 
+    def cardinal_neighbors(self) -> Iterator["IntVector2"]:
+        return (self + d for d in IntVector2.cardinal_directions())
+
     @staticmethod
     def diagonal_directions() -> Iterator["IntVector2"]:
         yield IntVector2(1, -1)
