@@ -1,3 +1,4 @@
+from pytest import skip
 from aoc2024.common.grid import IntVector2
 import aoc2024.common.input as aoc_input
 from .day13 import Machine, OptimalPresses, parse_all, part_one_answer
@@ -37,3 +38,12 @@ def test_no_result():
 
 def test_part_one_answer():
     assert part_one_answer(SAMPLE_INPUT) == 480
+
+
+def test_corrected():
+    skip()
+    corrected_machines = [m.corrected() for m in MACHINES]
+    assert corrected_machines[0].get_optimal_presses() == None
+    assert corrected_machines[1].get_optimal_presses() != None
+    assert corrected_machines[2].get_optimal_presses() == None
+    assert corrected_machines[3].get_optimal_presses() != None

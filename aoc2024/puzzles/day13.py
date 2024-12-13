@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import cached_property
 import itertools
 import re
@@ -45,20 +45,22 @@ class Machine:
 
     def get_optimal_presses(self) -> OptimalPresses | None:
         max_a_presses = min(
-            self.prize.x // self.button_a.x, self.prize.y // self.button_a.y, 100
-        )
-        max_b_presses = min(
-            self.prize.x // self.button_b.x, self.prize.y // self.button_b.y, 100
+            self.prize.x // self.button_a.x, self.prize.y // self.button_a.y
         )
         for a in range(max_a_presses + 1):
-            for b in range(max_b_presses + 1):
-                position = self.button_a * a + self.button_b * b
-                if position == self.prize:
-                    return OptimalPresses(a, b)
-                if position.x > self.prize.x or position.y > self.prize.y:
-                    # can't get any further by pressing more buttons
-                    break
+            a_position = self.button_a * a
+            remaining = self.prize - a_position
+            if remaining.x % self.button_b.x != 0:
+                # no amount of B presses will help
+                continue
+            b = remaining.x // self.button_b.x
+            if a_position + self.button_b * b == self.prize:
+                return OptimalPresses(a, b)
         return None
+
+    def corrected(self) -> "Machine":
+        offset = 10_000_000_000_000
+        return replace(self, prize=self.prize + IntVector2(offset, offset))
 
 
 def parse_all(lines: list[str]) -> list[Machine]:
