@@ -1,7 +1,15 @@
 from textwrap import dedent
 from aoc2024.common.grid import IntVector2
 import aoc2024.common.input as aoc_input
-from .day12 import Region, get_regions, parse, RegionSolver, part_one_answer
+from .day12 import (
+    EdgesSolver,
+    Region,
+    get_regions,
+    parse,
+    RegionSolver,
+    part_one_answer,
+    part_two_answer,
+)
 
 SIMPLE_INPUT = aoc_input.lines(
     dedent(
@@ -95,3 +103,52 @@ def test_part_one_answer():
     assert part_one_answer(SIMPLE_INPUT) == 140
     assert part_one_answer(NESTED_INPUT) == 772
     assert part_one_answer(LARGE_INPUT) == 1930
+
+
+def test_sides():
+    regions = get_regions(parse(SIMPLE_INPUT))
+    regions_with_sides = {region.plant: region.sides for region in regions}
+    assert regions_with_sides == {"A": 4, "B": 4, "C": 8, "D": 4, "E": 4}
+
+
+def test_sides_detail():
+    region = Region(
+        "A",
+        frozenset(
+            [IntVector2(0, 0), IntVector2(1, 0), IntVector2(2, 0), IntVector2(3, 0)]
+        ),
+    )
+    solver = EdgesSolver(region)
+    edges = solver.get_edges()
+    print(edges)
+    assert len(edges) == 4
+
+
+def test_part_two_answer():
+    assert part_two_answer(SIMPLE_INPUT) == 80
+    input_with_e = aoc_input.lines(
+        dedent(
+            """
+            EEEEE
+            EXXXX
+            EEEEE
+            EXXXX
+            EEEEE
+            """
+        )
+    )
+    assert part_two_answer(input_with_e) == 236
+    input_with_diagonal = aoc_input.lines(
+        dedent(
+            """
+            AAAAAA
+            AAABBA
+            AAABBA
+            ABBAAA
+            ABBAAA
+            AAAAAA
+            """
+        )
+    )
+    assert part_two_answer(input_with_diagonal) == 368
+    assert part_two_answer(LARGE_INPUT) == 1206
