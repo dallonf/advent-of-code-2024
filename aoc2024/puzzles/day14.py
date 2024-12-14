@@ -98,3 +98,4 @@ def part_one_answer(lines: list[str], shape: GridShape = real_shape()) -> int:
 if __name__ == "__main__":
     puzzle_input = aoc_input.load_lines("day14input")
     print("Part One:", part_one_answer(puzzle_input))
+    print("See day14_part2")
