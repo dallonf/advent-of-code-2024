@@ -118,6 +118,23 @@ class GridShape:
             and coord.y < self.height
         )
 
+    def format(self, func: Callable[[IntVector2], str]) -> str:
+        lines: list[str] = []
+        cell_length = None
+        for y in range(self.height):
+            line = ""
+            for x in range(self.width):
+                cell = func(IntVector2(x, y))
+                if cell_length is None:
+                    cell_length = len(cell)
+                else:
+                    assert (
+                        len(cell) == cell_length
+                    ), f"Expected all cells to be the same width - the first was {cell_length} long, but received {cell} which was {len(cell)} long."
+                line += cell
+            lines.append(line)
+        return "\n".join(lines)
+
 
 class BasicGrid[T]:
     _width: int
