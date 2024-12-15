@@ -1,4 +1,6 @@
 from textwrap import dedent
+
+from pytest import skip
 from aoc2024.common.grid import Direction
 import aoc2024.common.input as aoc_input
 from .day15 import PuzzleInput, Warehouse, part_one_answer
@@ -241,3 +243,103 @@ def test_sample_moves():
 
 def test_part_one_answer():
     assert part_one_answer(SAMPLE_INPUT) == 10092
+
+
+SECOND_SMALL_EXAMPLE = aoc_input.lines(
+    dedent(
+        """
+        #######
+        #...#.#
+        #.....#
+        #..OO@#
+        #..O..#
+        #.....#
+        #######
+
+        <vv<<^^<<^^
+        """
+    )
+)
+
+
+def test_parse_wide():
+    warehouse = PuzzleInput.parse_wide(SECOND_SMALL_EXAMPLE).warehouse
+    assert (
+        warehouse.format()
+        == dedent(
+            """
+            ##############
+            ##......##..##
+            ##..........##
+            ##....[][]@.##
+            ##....[]....##
+            ##..........##
+            ##############
+            """
+        ).strip()
+    )
+
+
+def test_push_boxes_wide():
+    warehouse = PuzzleInput.parse_wide(SECOND_SMALL_EXAMPLE).warehouse
+
+    warehouse.move(Direction.LEFT)
+    assert (
+        warehouse.format()
+        == dedent(
+            """
+            ##############
+            ##......##..##
+            ##..........##
+            ##...[][]@..##
+            ##....[]....##
+            ##..........##
+            ##############
+            """
+        ).strip()
+    )
+
+    skip("not yet working")
+
+    warehouse.move(Direction.DOWN)
+    warehouse.move(Direction.DOWN)
+    warehouse.move(Direction.LEFT)
+    warehouse.move(Direction.LEFT)
+    warehouse.move(Direction.UP)
+    assert (
+        warehouse.format()
+        == dedent(
+            """
+            ##############
+            ##......##..##
+            ##...[][]...##
+            ##....[]....##
+            ##.....@....##
+            ##..........##
+            ##############
+            """
+        ).strip()
+    )
+
+
+def test_wide_moves():
+    skip("not yet working")
+    puzzle_input = PuzzleInput.parse_wide(SAMPLE_INPUT)
+    puzzle_input.execute()
+    assert (
+        puzzle_input.warehouse.format()
+        == dedent(
+            """
+            ####################
+            ##[].......[].[][]##
+            ##[]...........[].##
+            ##[]........[][][]##
+            ##[]......[]....[]##
+            ##..##......[]....##
+            ##..[]............##
+            ##..@......[].[][]##
+            ##......[][]..[]..##
+            ####################
+            """
+        ).strip()
+    )

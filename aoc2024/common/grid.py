@@ -174,6 +174,11 @@ class BasicGrid[T]:
             items += list(line)
         return BasicGrid(items, expected_width)
 
+    @staticmethod
+    def filled(shape: GridShape, value: T) -> "BasicGrid[T]":
+        items = [value for _ in range(shape.width * shape.height)]
+        return BasicGrid(items, shape.width)
+
     def map[
         Output
     ](self, func: Callable[[IntVector2, T], Output]) -> "BasicGrid[Output]":

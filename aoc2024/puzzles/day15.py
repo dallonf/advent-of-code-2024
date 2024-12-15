@@ -1,12 +1,23 @@
 from dataclasses import dataclass
 from enum import Enum, auto
-from aoc2024.common.grid import BasicGrid, Direction, IntVector2
+from aoc2024.common.grid import BasicGrid, Direction, GridShape, IntVector2
 import aoc2024.common.input as aoc_input
+
+
+@dataclass(frozen=True)
+class WideBox:
+    left: IntVector2
+
+    @property
+    def right(self):
+        return self.left + Direction.RIGHT.to_vector()
 
 
 class WarehouseTile(Enum):
     Wall = auto()
     Box = auto()
+    WideBoxLeft = auto()
+    WideBoxRight = auto()
 
 
 class Warehouse:
@@ -35,6 +46,36 @@ class Warehouse:
         result.robot_position = robot_position
         return result
 
+    @staticmethod
+    def parse_wide(lines: list[str]):
+        char_grid = BasicGrid.parse_char_grid(lines)
+        robot_position = next(pos for pos, char in char_grid.all_items() if char == "@")
+        robot_position += IntVector2(robot_position.x, 0)
+
+        grid = BasicGrid[WarehouseTile | None].filled(
+            GridShape(char_grid.width * 2, char_grid.shape.height), None
+        )
+
+        for thin_pos, char in char_grid.all_items():
+            pos_left = thin_pos + IntVector2(thin_pos.x, 0)
+            pos_right = pos_left + Direction.RIGHT.to_vector()
+            match char:
+                case "." | "@":
+                    pass
+                case "#":
+                    grid[pos_left] = WarehouseTile.Wall
+                    grid[pos_right] = WarehouseTile.Wall
+                case "O":
+                    grid[pos_left] = WarehouseTile.WideBoxLeft
+                    grid[pos_right] = WarehouseTile.WideBoxRight
+                case _:
+                    raise AssertionError(f"unknown char at {thin_pos}: {char}")
+
+        result = Warehouse()
+        result.grid = grid
+        result.robot_position = robot_position
+        return result
+
     def format(self):
         def entity_to_char(pos: IntVector2, entity: WarehouseTile | None):
             match entity:
@@ -44,28 +85,61 @@ class Warehouse:
                     return "#"
                 case WarehouseTile.Box:
                     return "O"
+                case WarehouseTile.WideBoxLeft:
+                    return "["
+                case WarehouseTile.WideBoxRight:
+                    return "]"
 
         char_grid = self.grid.map(entity_to_char)
         char_grid[self.robot_position] = "@"
         return char_grid.format_char_grid()
 
     def move(self, direction: Direction):
-        boxes_to_push = list[IntVector2]()
+        is_horizontal = direction in (Direction.LEFT, Direction.RIGHT)
+        boxes_to_push = list[IntVector2 | WideBox]()
         lookahead = self.robot_position + direction.to_vector()
-        while self.grid[lookahead] == WarehouseTile.Box:
-            boxes_to_push.append(lookahead)
-            lookahead += direction.to_vector()
+        while (tile := self.grid[lookahead]) in (
+            WarehouseTile.Box,
+            WarehouseTile.WideBoxLeft,
+            WarehouseTile.WideBoxRight,
+        ):
+            match tile:
+                case WarehouseTile.Box:
+                    boxes_to_push.append(lookahead)
+                    lookahead += direction.to_vector()
+                case WarehouseTile.WideBoxLeft | WarehouseTile.WideBoxRight:
+                    wide_box = (
+                        WideBox(lookahead)
+                        if tile == WarehouseTile.WideBoxLeft
+                        else WideBox(lookahead + Direction.LEFT.to_vector())
+                    )
+                    boxes_to_push.append(wide_box)
+                    lookahead += (
+                        direction.to_vector()
+                        if is_horizontal
+                        else direction.to_vector()
+                    )
 
         if self.grid[lookahead] is None:
             for box in reversed(boxes_to_push):
-                self.grid[box + direction.to_vector()] = WarehouseTile.Box
-                self.grid[box] = None
+                if isinstance(box, WideBox):
+                    self.grid[box.left] = None
+                    self.grid[box.right] = None
+                    self.grid[box.left + direction.to_vector()] = (
+                        WarehouseTile.WideBoxLeft
+                    )
+                    self.grid[box.right + direction.to_vector()] = (
+                        WarehouseTile.WideBoxRight
+                    )
+                else:
+                    self.grid[box + direction.to_vector()] = WarehouseTile.Box
+                    self.grid[box] = None
             self.robot_position += direction.to_vector()
 
     def sum_box_gps(self):
         result = 0
         for coord, entity in self.grid.all_items():
-            if entity is not WarehouseTile.Box:
+            if entity not in (WarehouseTile.Box, WarehouseTile.WideBoxLeft):
                 continue
 
             result += coord.y * 100 + coord.x
@@ -81,28 +155,40 @@ class PuzzleInput:
     def parse(lines: list[str]):
         separator = lines.index("")
         warehouse = Warehouse.parse(lines[:separator])
-        moves_str = "".join(lines[separator + 1 :])
+        moves = parse_moves(lines[separator + 1 :])
 
-        def parse_move(char: str):
-            match (char):
-                case "^":
-                    return Direction.UP
-                case "<":
-                    return Direction.LEFT
-                case ">":
-                    return Direction.RIGHT
-                case "v":
-                    return Direction.DOWN
-                case _:
-                    raise AssertionError(f"unknown char: {char}")
+        return PuzzleInput(warehouse, moves)
 
-        moves = list(map(parse_move, moves_str))
+    @staticmethod
+    def parse_wide(lines: list[str]):
+        separator = lines.index("")
+        warehouse = Warehouse.parse_wide(lines[:separator])
+        moves = parse_moves(lines[separator + 1 :])
 
         return PuzzleInput(warehouse, moves)
 
     def execute(self):
         for move in self.moves:
             self.warehouse.move(move)
+
+
+def parse_moves(lines: list[str]):
+    moves_str = "".join(lines)
+
+    def parse_move(char: str):
+        match (char):
+            case "^":
+                return Direction.UP
+            case "<":
+                return Direction.LEFT
+            case ">":
+                return Direction.RIGHT
+            case "v":
+                return Direction.DOWN
+            case _:
+                raise AssertionError(f"unknown char: {char}")
+
+    return list(map(parse_move, moves_str))
 
 
 def part_one_answer(lines: list[str]):
