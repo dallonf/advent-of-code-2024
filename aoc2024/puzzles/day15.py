@@ -202,6 +202,7 @@ def part_one_answer(lines: list[str]):
     puzzle_input.execute()
     return puzzle_input.warehouse.sum_box_gps()
 
+
 def part_two_answer(lines: list[str]):
     puzzle_input = PuzzleInput.parse_wide(lines)
     puzzle_input.execute()

@@ -1,6 +1,6 @@
 from textwrap import dedent
 
-from pytest import skip
+
 from aoc2024.common.grid import Direction
 import aoc2024.common.input as aoc_input
 from .day15 import PuzzleInput, Warehouse, part_one_answer
