@@ -83,6 +83,7 @@ def test_move():
     )
 
     warehouse.move(Direction.RIGHT)
+    print(warehouse.format())
     assert (
         warehouse.format()
         == dedent(
@@ -299,8 +300,6 @@ def test_push_boxes_wide():
         ).strip()
     )
 
-    skip("not yet working")
-
     warehouse.move(Direction.DOWN)
     warehouse.move(Direction.DOWN)
     warehouse.move(Direction.LEFT)
@@ -321,11 +320,64 @@ def test_push_boxes_wide():
         ).strip()
     )
 
+    warehouse.move(Direction.LEFT)
+    warehouse.move(Direction.LEFT)
+    warehouse.move(Direction.UP)
+    warehouse.move(Direction.UP)
+    assert (
+        warehouse.format()
+        == dedent(
+            """
+            ##############
+            ##...[].##..##
+            ##...@.[]...##
+            ##....[]....##
+            ##..........##
+            ##..........##
+            ##############
+            """
+        ).strip()
+    )
+
+
+def test_edge_cases():
+    skip("not yet working")
+    warehouse = Warehouse.parse(
+        aoc_input.lines(
+            dedent(
+                """
+                ##############
+                ##......##..##
+                ##...[][]...##
+                ##....[]....##
+                ##.....@....##
+                ##..........##
+                ##############
+                """
+            ).strip()
+        )
+    )
+    warehouse.move(Direction.UP)
+    assert (
+        warehouse.format()
+        == dedent(
+            """
+            ##############
+            ##......##..##
+            ##...[][]...##
+            ##....[]....##
+            ##.....@....##
+            ##..........##
+            ##############
+            """
+        ).strip()
+    )
+
 
 def test_wide_moves():
-    skip("not yet working")
     puzzle_input = PuzzleInput.parse_wide(SAMPLE_INPUT)
     puzzle_input.execute()
+    skip()
     assert (
         puzzle_input.warehouse.format()
         == dedent(

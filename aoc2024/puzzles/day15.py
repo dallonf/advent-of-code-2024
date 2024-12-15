@@ -1,3 +1,4 @@
+from collections import deque
 from dataclasses import dataclass
 from enum import Enum, auto
 from aoc2024.common.grid import BasicGrid, Direction, GridShape, IntVector2
@@ -37,6 +38,11 @@ class Warehouse:
                     return WarehouseTile.Wall
                 case "O":
                     return WarehouseTile.Box
+                # parse these for testing
+                case "[":
+                    return WarehouseTile.WideBoxLeft
+                case "]":
+                    return WarehouseTile.WideBoxRight
                 case _:
                     raise AssertionError(f"unknown char at {pos}: {char}")
 
@@ -97,44 +103,44 @@ class Warehouse:
     def move(self, direction: Direction):
         is_horizontal = direction in (Direction.LEFT, Direction.RIGHT)
         boxes_to_push = list[IntVector2 | WideBox]()
-        lookahead = self.robot_position + direction.to_vector()
-        while (tile := self.grid[lookahead]) in (
-            WarehouseTile.Box,
-            WarehouseTile.WideBoxLeft,
-            WarehouseTile.WideBoxRight,
-        ):
+        lookahead_queue = deque([self.robot_position + direction.to_vector()])
+        while len(lookahead_queue) > 0:
+            tile = self.grid[(lookahead := lookahead_queue.popleft())]
             match tile:
                 case WarehouseTile.Box:
                     boxes_to_push.append(lookahead)
-                    lookahead += direction.to_vector()
+                    lookahead_queue.append(lookahead + direction.to_vector())
                 case WarehouseTile.WideBoxLeft | WarehouseTile.WideBoxRight:
                     wide_box = (
                         WideBox(lookahead)
                         if tile == WarehouseTile.WideBoxLeft
                         else WideBox(lookahead + Direction.LEFT.to_vector())
                     )
+                    if wide_box in boxes_to_push:
+                        continue
                     boxes_to_push.append(wide_box)
-                    lookahead += (
-                        direction.to_vector()
-                        if is_horizontal
-                        else direction.to_vector()
-                    )
+                    if is_horizontal:
+                        lookahead_queue.append(lookahead + direction.to_vector() * 2)
+                    else:
+                        lookahead_queue.append(wide_box.left + direction.to_vector())
+                        lookahead_queue.append(wide_box.right + direction.to_vector())
+                case WarehouseTile.Wall:
+                    return
+                case None:
+                    break
 
-        if self.grid[lookahead] is None:
-            for box in reversed(boxes_to_push):
-                if isinstance(box, WideBox):
-                    self.grid[box.left] = None
-                    self.grid[box.right] = None
-                    self.grid[box.left + direction.to_vector()] = (
-                        WarehouseTile.WideBoxLeft
-                    )
-                    self.grid[box.right + direction.to_vector()] = (
-                        WarehouseTile.WideBoxRight
-                    )
-                else:
-                    self.grid[box + direction.to_vector()] = WarehouseTile.Box
-                    self.grid[box] = None
-            self.robot_position += direction.to_vector()
+        for box in reversed(boxes_to_push):
+            if isinstance(box, WideBox):
+                self.grid[box.left] = None
+                self.grid[box.right] = None
+                self.grid[box.left + direction.to_vector()] = WarehouseTile.WideBoxLeft
+                self.grid[box.right + direction.to_vector()] = (
+                    WarehouseTile.WideBoxRight
+                )
+            else:
+                self.grid[box + direction.to_vector()] = WarehouseTile.Box
+                self.grid[box] = None
+        self.robot_position += direction.to_vector()
 
     def sum_box_gps(self):
         result = 0
