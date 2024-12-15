@@ -341,7 +341,6 @@ def test_push_boxes_wide():
 
 
 def test_edge_cases():
-    skip("not yet working")
     warehouse = Warehouse.parse(
         aoc_input.lines(
             dedent(
@@ -377,7 +376,6 @@ def test_edge_cases():
 def test_wide_moves():
     puzzle_input = PuzzleInput.parse_wide(SAMPLE_INPUT)
     puzzle_input.execute()
-    skip()
     assert (
         puzzle_input.warehouse.format()
         == dedent(
@@ -395,3 +393,4 @@ def test_wide_moves():
             """
         ).strip()
     )
+    assert puzzle_input.warehouse.sum_box_gps() == 9021

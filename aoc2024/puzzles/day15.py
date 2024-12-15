@@ -127,7 +127,7 @@ class Warehouse:
                 case WarehouseTile.Wall:
                     return
                 case None:
-                    break
+                    pass
 
         for box in reversed(boxes_to_push):
             if isinstance(box, WideBox):
@@ -202,7 +202,13 @@ def part_one_answer(lines: list[str]):
     puzzle_input.execute()
     return puzzle_input.warehouse.sum_box_gps()
 
+def part_two_answer(lines: list[str]):
+    puzzle_input = PuzzleInput.parse_wide(lines)
+    puzzle_input.execute()
+    return puzzle_input.warehouse.sum_box_gps()
+
 
 if __name__ == "__main__":
     puzzle_input = aoc_input.load_lines("day15input")
     print("Part One:", part_one_answer(puzzle_input))
+    print("Part Two:", part_two_answer(puzzle_input))
