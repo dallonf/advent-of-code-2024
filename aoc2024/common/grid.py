@@ -89,6 +89,9 @@ class IntVector2:
         else:
             return IntVector2(x[0], x[1])
 
+    def manhattan_distance(self, other: "IntVector2") -> int:
+        return abs(self.x - other.x) + abs(self.y - other.y)
+
 
 @dataclass
 class GridShape:
