@@ -43,3 +43,21 @@ A = 2024 / 8 = 253
 out 1012 % 8 = 4
 ...
 ugh, that's not right, should be 0 to start with
+
+waaaait a minute that was all the sample input, wasn't it
+
+bst A
+bxc
+bxl 1
+bxl 7
+cdv B
+out 1
+bxl 5
+out A
+bxc
+out 0
+adv 3
+jnz 5
+out B
+out 3
+jnz 0

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum, auto
+import itertools
 from typing import Optional
 import aoc2024.common.input as aoc_input
 
@@ -153,6 +154,51 @@ class Computer:
         return self.output == expected_output
 
 
+def disassemble_combo_operand(operand: int) -> str:
+    match operand:
+        case 0 | 1 | 2 | 3:
+            return str(operand)
+        case 4:
+            return "A"
+        case 5:
+            return "B"
+        case 6:
+            return "C"
+        case _:
+            raise AssertionError(f"Unexpected combo operand: {operand}")
+
+
+def disassemble_low_level_instruction(instruction: int, operand: int) -> str:
+    match instruction:
+        case 0:
+            return f"adv {disassemble_combo_operand(operand)}"
+        case 1:
+            return f"bxl {operand}"
+        case 2:
+            return f"bst {disassemble_combo_operand(operand)}"
+        case 3:
+            return f"jnz {operand}"
+        case 4:
+            return "bxc"
+        case 5:
+            return f"out {disassemble_combo_operand(operand)}"
+        case 6:
+            return f"bdv {disassemble_combo_operand(operand)}"
+        case 7:
+            return f"cdv {disassemble_combo_operand(operand)}"
+        case _:
+            raise AssertionError(f"Unexpected opcode: {instruction}")
+
+
+def disassemble_low_level(instructions: list[int]) -> str:
+    pairs = itertools.pairwise(instructions)
+    lines = [
+        f"{str(i).rjust(2)}: " + disassemble_low_level_instruction(inst, op)
+        for i, (inst, op) in enumerate(pairs)
+    ]
+    return "\n".join(lines)
+
+
 def part_one_answer(lines: list[str]) -> str:
     computer = Computer.parse(lines)
     computer.execute()
@@ -185,6 +231,9 @@ def part_two_answer(lines: list[str]) -> int:
 
 if __name__ == "__main__":
     puzzle_input = aoc_input.load_lines("day17input")
+    instructions = Computer.parse(puzzle_input).instruction_memory
+    print("Low-level disassembly:")
+    print(disassemble_low_level(instructions))
     print("Part One:", part_one_answer(puzzle_input))
     # not yet optimized enough to run
     # print("Part Two:", part_two_answer(puzzle_input))
