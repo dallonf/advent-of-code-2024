@@ -56,3 +56,18 @@ def test_part_two_answer():
         )
     )
     assert part_two_answer(sample_input) == 117440
+
+
+def test_octal_hypothesis():
+    octal_num = 0o163602634
+    assert octal_num % 8 == 4
+    next_num = octal_num // 8
+    assert next_num == 0o16360263
+    assert next_num % 8 == 3
+
+    digits = list[int]()
+    next_num = octal_num
+    while next_num > 0:
+        digits.append(next_num % 8)
+        next_num = next_num // 8
+    assert [str(d) for d in digits] == list(reversed(oct(octal_num).removeprefix("0o")))

@@ -190,10 +190,32 @@ def disassemble_low_level_instruction(instruction: int, operand: int) -> str:
             raise AssertionError(f"Unexpected opcode: {instruction}")
 
 
-def disassemble_low_level(instructions: list[int]) -> str:
-    pairs = itertools.pairwise(instructions)
+def disassemble_high_level_instruction(instruction: int, operand: int) -> str:
+    match instruction:
+        case 0:
+            return f"A = A / pow(2, {disassemble_combo_operand(operand)})"
+        case 1:
+            return f"B = xor(B, {operand})"
+        case 2:
+            return f"B = {disassemble_combo_operand(operand)} % 8"
+        case 3:
+            return f"goto {operand} if A != 0"
+        case 4:
+            return "B = xor(B, C)"
+        case 5:
+            return f"output({disassemble_combo_operand(operand)} % 8)"
+        case 6:
+            return f"B = A / pow(2, {disassemble_combo_operand(operand)})"
+        case 7:
+            return f"C = A / pow(2, {disassemble_combo_operand(operand)})"
+        case _:
+            raise AssertionError(f"Unexpected opcode: {instruction}")
+
+
+def disassemble(instructions: list[int]) -> str:
+    pairs = itertools.batched(instructions, 2)
     lines = [
-        f"{str(i).rjust(2)}: " + disassemble_low_level_instruction(inst, op)
+        f"{str(i).rjust(2)}: {disassemble_low_level_instruction(inst, op).ljust(5)} -- {disassemble_high_level_instruction(inst, op)}"
         for i, (inst, op) in enumerate(pairs)
     ]
     return "\n".join(lines)
@@ -231,9 +253,9 @@ def part_two_answer(lines: list[str]) -> int:
 
 if __name__ == "__main__":
     puzzle_input = aoc_input.load_lines("day17input")
-    instructions = Computer.parse(puzzle_input).instruction_memory
-    print("Low-level disassembly:")
-    print(disassemble_low_level(instructions))
+    puzzle_instructions = Computer.parse(puzzle_input).instruction_memory
+    print("Disassembly:")
+    print(disassemble(puzzle_instructions))
     print("Part One:", part_one_answer(puzzle_input))
     # not yet optimized enough to run
     # print("Part Two:", part_two_answer(puzzle_input))
