@@ -1,4 +1,6 @@
+from dataclasses import dataclass
 from enum import Enum, auto
+from typing import Optional
 import aoc2024.common.input as aoc_input
 
 
@@ -6,6 +8,14 @@ class Register(Enum):
     A = auto()
     B = auto()
     C = auto()
+
+
+@dataclass(frozen=True)
+class ComputerState:
+    instruction_pointer: int
+    register_a: int
+    register_b: int
+    register_c: int
 
 
 class Computer:
@@ -17,13 +27,22 @@ class Computer:
 
     output: list[int]
 
-    def __init__(self, instructions: list[int], /, a: int = 0, b: int = 0, c: int = 0):
+    def __init__(
+        self,
+        instructions: list[int],
+        /,
+        a: int = 0,
+        b: int = 0,
+        c: int = 0,
+        cache: Optional[dict[ComputerState, list[int]]] = None,
+    ):
         self.instruction_memory = instructions
         self.register_a = a
         self.register_b = b
         self.register_c = c
 
         self.output = list[int]()
+        self.cache = cache or dict()
         self.instruction_pointer = 0
 
     @staticmethod
@@ -107,11 +126,51 @@ class Computer:
             )
             self.instruction_pointer += 2
 
+    # actually slower than just `execute`
+    def execute_searching(self, expected_output: list[int]) -> bool:
+        explored_states = list[tuple[ComputerState, list[int]]]()
+        while self.instruction_pointer < len(self.instruction_memory):
+            current_state = ComputerState(
+                self.instruction_pointer,
+                self.register_a,
+                self.register_b,
+                self.register_c,
+            )
+            if current_state in self.cache:
+                self.output += self.cache[current_state]
+                break
+
+            explored_states.append((current_state, list()))
+
+            instruction = self.instruction_memory[self.instruction_pointer]
+            operand = self.instruction_memory[self.instruction_pointer + 1]
+            self.execute_instruction(instruction, operand)
+            self.instruction_pointer += 2
+            # if something was just outputted, add it to the cache
+            if instruction == 5:
+                for _, cached_output in explored_states:
+                    cached_output.append(self.output[-1])
+        return self.output == expected_output
+
 
 def part_one_answer(lines: list[str]) -> str:
     computer = Computer.parse(lines)
     computer.execute()
     return ",".join((str(o) for o in computer.output))
+
+
+def part_two_answer_overengineered_and_slow(lines: list[str]) -> int:
+    prev_cache = None
+    for candidate_a in range(1_000_000):
+        computer = Computer.parse(lines)
+        if prev_cache is not None:
+            computer.cache = prev_cache
+        computer.register_a = candidate_a
+        success = computer.execute_searching(computer.instruction_memory)
+        prev_cache = computer.cache
+        if success:
+            return candidate_a
+    raise AssertionError("No candidate found in 0 - 1,000,000")
 
 
 def part_two_answer(lines: list[str]) -> int:
