@@ -114,6 +114,18 @@ def part_one_answer(lines: list[str]) -> str:
     return ",".join((str(o) for o in computer.output))
 
 
+def part_two_answer(lines: list[str]) -> int:
+    for candidate_a in range(1_000_000):
+        computer = Computer.parse(lines)
+        computer.register_a = candidate_a
+        computer.execute()
+        if computer.output == computer.instruction_memory:
+            return candidate_a
+    raise AssertionError("No candidate found in 0 - 1,000,000")
+
+
 if __name__ == "__main__":
     puzzle_input = aoc_input.load_lines("day17input")
     print("Part One:", part_one_answer(puzzle_input))
+    # not yet optimized enough to run
+    # print("Part Two:", part_two_answer(puzzle_input))
