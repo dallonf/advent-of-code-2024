@@ -201,13 +201,26 @@ def part_one_answer(lines: list[str]) -> str:
 
 def part_two_answer(lines: list[str], single_iteration_fn: Callable[[int], int]) -> int:
     computer = Computer.parse(lines)
-    reverse_engineered_a = 0
-    for target_value in reversed(computer.instruction_memory):
+
+    def solve(remaining_output: tuple[int, ...], current_a: int):
+        if len(remaining_output) == 0:
+            return current_a
+
+        possible_results = list[int]()
+        target_value = remaining_output[-1]
         for candidate_octal_digit in range(8):
-            candidate_a = reverse_engineered_a + candidate_octal_digit
+            candidate_a = current_a * 8 + candidate_octal_digit
             if single_iteration_fn(candidate_a) == target_value:
-                reverse_engineered_a = candidate_a * 8
-                break
+                possible_result = solve(remaining_output[:-1], candidate_a)
+                if possible_result is not None:
+                    possible_results.append(possible_result)
+
+        if len(possible_results) == 0:
+            return None
+        return min(possible_results)
+
+    reverse_engineered_a = solve(tuple(computer.instruction_memory), 0)
+    assert reverse_engineered_a is not None, "No solution found"
 
     computer.register_a = reverse_engineered_a
     computer.execute()
@@ -233,8 +246,7 @@ if __name__ == "__main__":
     print("Disassembly:")
     print(disassemble(puzzle_instructions))
     print("Part One:", part_one_answer(puzzle_input))
-    # not yet working correctly
-    # print(
-    #     "Part Two:",
-    #     part_two_answer(puzzle_input, puzzle_input_single_iteration),
-    # )
+    print(
+        "Part Two:",
+        part_two_answer(puzzle_input, puzzle_input_single_iteration),
+    )
