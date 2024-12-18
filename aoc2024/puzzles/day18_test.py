@@ -1,6 +1,12 @@
 from textwrap import dedent
 import aoc2024.common.input as aoc_input
-from .day18 import Region, parse_obstacles, part_one_answer, sample_shape
+from .day18 import (
+    Region,
+    parse_obstacles,
+    part_one_answer,
+    part_two_answer,
+    sample_shape,
+)
 
 SAMPLE_INPUT = aoc_input.load_lines("day18sample")
 
@@ -29,3 +35,8 @@ def test_parse_and_add_obstacles():
 def test_part_one_answer():
     result = part_one_answer(SAMPLE_INPUT, shape=sample_shape(), falling_ticks=12)
     assert result == 22
+
+
+def test_part_two_answer():
+    result = part_two_answer(SAMPLE_INPUT, shape=sample_shape())
+    assert result == "6,1"

@@ -1,6 +1,6 @@
 import bisect
 from functools import cached_property
-from typing import Sequence
+from typing import Optional, Sequence
 from aoc2024.common.grid import GridShape, IntVector2
 import aoc2024.common.input as aoc_input
 
@@ -28,7 +28,10 @@ class Region:
     def add_obstacles(self, obstacles: Sequence[IntVector2]):
         self.obstacles.update(obstacles)
 
-    def find_path(self) -> tuple[int, list[IntVector2]]:
+    def add_obstacle(self, obstacle: IntVector2):
+        self.obstacles.add(obstacle)
+
+    def find_path(self) -> Optional[tuple[int, list[IntVector2]]]:
         start = IntVector2(0, 0)
 
         frontier_by_priority: list[tuple[IntVector2, int]] = [(start, 0)]
@@ -59,7 +62,7 @@ class Region:
                     )
                     came_from[next] = current
 
-        raise AssertionError("no path found")
+        return None
 
     def debug(self):
         return self.shape.format(lambda coord: "#" if coord in self.obstacles else ".")
@@ -79,9 +82,32 @@ def part_one_answer(
     obstacles = parse_obstacles(lines)
     region = Region(shape)
     region.add_obstacles(obstacles[:falling_ticks])
-    return region.find_path()[0]
+    path = region.find_path()
+    if path is None:
+        raise AssertionError("no path found")
+    return path[0]
+
+
+def part_two_answer(lines: list[str], shape: GridShape = real_shape()) -> str:
+    obstacles = parse_obstacles(lines)
+    region = Region(shape)
+    path = region.find_path()
+    if path is None:
+        raise AssertionError("no path found initially")
+    steps_along_path = set(path[1])
+    for o in obstacles:
+        region.add_obstacle(o)
+        # recalculate path if the current path gets blocked
+        if o in steps_along_path:
+            path = region.find_path()
+            if path is None:
+                return f"{o.x},{o.y}"
+            steps_along_path = set(path[1])
+
+    raise AssertionError("Operation completed successfully (path was never blocked)")
 
 
 if __name__ == "__main__":
     puzzle_input = aoc_input.load_lines("day18input")
     print("Part One:", part_one_answer(puzzle_input))
+    print("Part Two:", part_two_answer(puzzle_input))
