@@ -1,6 +1,10 @@
 from textwrap import dedent
 import aoc2024.common.input as aoc_input
-from .day17 import Computer, part_two_answer
+from .day17 import (
+    Computer,
+    part_two_answer,
+    disassemble,
+)
 
 
 def test_programs():
@@ -38,6 +42,7 @@ def test_full_input():
             """
         )
     )
+
     computer = Computer.parse(sample_input)
     computer.execute()
     assert computer.output == [4, 6, 3, 5, 6, 3, 5, 2, 1, 0]
@@ -55,7 +60,8 @@ def test_part_two_answer():
             """
         )
     )
-    assert part_two_answer(sample_input) == 117440
+    print(disassemble(Computer.parse(sample_input).instruction_memory))
+    assert oct(part_two_answer(sample_input, lambda a: a % 8)) == oct(117440)
 
 
 def test_octal_hypothesis():

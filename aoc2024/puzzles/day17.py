@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum, auto
 import itertools
-from typing import Optional
+from typing import Callable
 import aoc2024.common.input as aoc_input
 
 
@@ -35,7 +35,6 @@ class Computer:
         a: int = 0,
         b: int = 0,
         c: int = 0,
-        cache: Optional[dict[ComputerState, list[int]]] = None,
     ):
         self.instruction_memory = instructions
         self.register_a = a
@@ -43,7 +42,6 @@ class Computer:
         self.register_c = c
 
         self.output = list[int]()
-        self.cache = cache or dict()
         self.instruction_pointer = 0
 
     @staticmethod
@@ -127,32 +125,6 @@ class Computer:
             )
             self.instruction_pointer += 2
 
-    # actually slower than just `execute`
-    def execute_searching(self, expected_output: list[int]) -> bool:
-        explored_states = list[tuple[ComputerState, list[int]]]()
-        while self.instruction_pointer < len(self.instruction_memory):
-            current_state = ComputerState(
-                self.instruction_pointer,
-                self.register_a,
-                self.register_b,
-                self.register_c,
-            )
-            if current_state in self.cache:
-                self.output += self.cache[current_state]
-                break
-
-            explored_states.append((current_state, list()))
-
-            instruction = self.instruction_memory[self.instruction_pointer]
-            operand = self.instruction_memory[self.instruction_pointer + 1]
-            self.execute_instruction(instruction, operand)
-            self.instruction_pointer += 2
-            # if something was just outputted, add it to the cache
-            if instruction == 5:
-                for _, cached_output in explored_states:
-                    cached_output.append(self.output[-1])
-        return self.output == expected_output
-
 
 def disassemble_combo_operand(operand: int) -> str:
     match operand:
@@ -227,28 +199,32 @@ def part_one_answer(lines: list[str]) -> str:
     return ",".join((str(o) for o in computer.output))
 
 
-def part_two_answer_overengineered_and_slow(lines: list[str]) -> int:
-    prev_cache = None
-    for candidate_a in range(1_000_000):
-        computer = Computer.parse(lines)
-        if prev_cache is not None:
-            computer.cache = prev_cache
-        computer.register_a = candidate_a
-        success = computer.execute_searching(computer.instruction_memory)
-        prev_cache = computer.cache
-        if success:
-            return candidate_a
-    raise AssertionError("No candidate found in 0 - 1,000,000")
+def part_two_answer(lines: list[str], single_iteration_fn: Callable[[int], int]) -> int:
+    computer = Computer.parse(lines)
+    reverse_engineered_a = 0
+    for target_value in reversed(computer.instruction_memory):
+        for candidate_octal_digit in range(8):
+            candidate_a = reverse_engineered_a + candidate_octal_digit
+            if single_iteration_fn(candidate_a) == target_value:
+                reverse_engineered_a = candidate_a * 8
+                break
+
+    computer.register_a = reverse_engineered_a
+    computer.execute()
+    assert computer.output == computer.instruction_memory, (
+        f"Reverse engineered a value of {reverse_engineered_a} ({oct(reverse_engineered_a)}), but this didn't create the expected output."
+        + f" (expected: {computer.instruction_memory}, received: {computer.output})"
+    )
+    return reverse_engineered_a
 
 
-def part_two_answer(lines: list[str]) -> int:
-    for candidate_a in range(1_000_000):
-        computer = Computer.parse(lines)
-        computer.register_a = candidate_a
-        computer.execute()
-        if computer.output == computer.instruction_memory:
-            return candidate_a
-    raise AssertionError("No candidate found in 0 - 1,000,000")
+def puzzle_input_single_iteration(a: int) -> int:
+    b = a % 8
+    b = b ^ 1
+    c = a // pow(2, b)
+    b = b ^ 5
+    b = b ^ c
+    return b % 8
 
 
 if __name__ == "__main__":
@@ -257,5 +233,8 @@ if __name__ == "__main__":
     print("Disassembly:")
     print(disassemble(puzzle_instructions))
     print("Part One:", part_one_answer(puzzle_input))
-    # not yet optimized enough to run
-    # print("Part Two:", part_two_answer(puzzle_input))
+    # not yet working correctly
+    # print(
+    #     "Part Two:",
+    #     part_two_answer(puzzle_input, puzzle_input_single_iteration),
+    # )
