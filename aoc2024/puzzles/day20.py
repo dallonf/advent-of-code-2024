@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from functools import cache
 import sys
-from typing import Optional, cast
+from typing import Iterator, Optional, Sequence, cast
 from aoc2024.common.grid import BasicGrid, IntVector2
 import aoc2024.common.input as aoc_input
 
@@ -102,7 +102,9 @@ class Maze:
 
         return path
 
-    def find_cheats(self, minimum_savings: int = 1) -> CheatsBySavedTime:
+    def find_cheats(
+        self, minimum_savings: int = 1, cheat_length: int = 2
+    ) -> CheatsBySavedTime:
         legit_length = len(self.get_legit_path())
         max_length = legit_length - minimum_savings
 
@@ -140,25 +142,39 @@ class Maze:
                 new_cost = cost_so_far[current] + 1
                 if self.is_passable(n):
                     add_to_frontier(n, new_cost)
-                elif self.walls.get_if_in_bounds(n):
-                    # it's a wall, that means we can try to cheat through it
-                    cheat_start = n
-                    for cheat_end in cheat_start.cardinal_neighbors():
-                        remaining_cost = flow_map.get_if_in_bounds(cheat_end)
-                        if remaining_cost is not None and cheat_end not in cost_so_far:
-                            total_length = cost_so_far[current] + 2 + remaining_cost
-                            if total_length > max_length:
-                                continue
-                            already_discovered = discovered.get(
-                                (cheat_start, cheat_end)
-                            )
-                            if (
-                                already_discovered is None
-                                or total_length < already_discovered
-                            ):
-                                discovered[(cheat_start, cheat_end)] = total_length
+
+            cheat_start = current
+            for cheat_end in get_surrounding(cheat_start, cheat_length):
+                remaining_cost = flow_map.get_if_in_bounds(cheat_end)
+                if remaining_cost is not None and cheat_end not in cost_so_far:
+                    total_length = (
+                        cost_so_far[current]
+                        + cheat_end.manhattan_distance(cheat_start)
+                        + remaining_cost
+                    )
+                    if total_length > max_length:
+                        continue
+                    already_discovered = discovered.get((cheat_start, cheat_end))
+                    if already_discovered is None or total_length < already_discovered:
+                        discovered[(cheat_start, cheat_end)] = total_length
 
         return result()
+
+
+def get_surrounding(coord: IntVector2, steps: int) -> set[IntVector2]:
+    distances = dict[IntVector2, int]()
+    queue = deque[tuple[IntVector2, int]]([(coord, 0)])
+
+    while len(queue) > 0:
+        current, current_distance = queue.popleft()
+        if current_distance > steps or current in distances:
+            continue
+
+        distances[current] = current_distance
+        queue.extend((n, current_distance + 1) for n in current.cardinal_neighbors())
+
+    distances.pop(coord)  # the start is not surrounding itself
+    return set((k for k, v in distances.items() if v <= steps))
 
 
 def part_one_answer(lines: list[str]):
@@ -167,6 +183,13 @@ def part_one_answer(lines: list[str]):
     return sum(v for v in cheats.values())
 
 
+def part_two_answer(lines: list[str]):
+    maze = Maze.parse(lines)
+    cheats = maze.find_cheats(minimum_savings=100, cheat_length=20)
+    return sum(v for v in cheats.values())
+
+
 if __name__ == "__main__":
     puzzle_input = aoc_input.load_lines("day20input")
     print("Part One:", part_one_answer(puzzle_input))
+    print("Part Two:", part_two_answer(puzzle_input))
