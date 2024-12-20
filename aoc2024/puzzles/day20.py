@@ -1,7 +1,9 @@
 import bisect
-from dataclasses import dataclass, replace
+from collections import deque
+from dataclasses import dataclass
 from enum import Enum, auto
 from functools import cache
+import sys
 from typing import Optional, cast
 from aoc2024.common.grid import BasicGrid, IntVector2
 import aoc2024.common.input as aoc_input
@@ -61,94 +63,102 @@ class Maze:
         assert start is not None and end is not None
         return Maze(walls, start, end)
 
+    def is_passable(self, coord: IntVector2):
+        return self.walls.shape.is_in_bounds(coord) and not self.walls[coord]
+
+    @cache
+    def get_flow_map(self) -> BasicGrid[int | None]:
+        flow_map = BasicGrid[int | None].filled(self.walls.shape, None)
+        queue = deque[tuple[IntVector2, int]]()
+        queue.append((self.end, 0))
+        while len(queue) > 0:
+            current, distance = queue.popleft()
+            if self.is_passable(current):
+                prev_distance = flow_map[current]
+                if prev_distance is None or distance < prev_distance:
+                    flow_map[current] = distance
+                    queue.extend(
+                        ((n, distance + 1) for n in current.cardinal_neighbors())
+                    )
+
+        return flow_map
+
     @cache
     def get_legit_path(self) -> list[IntVector2]:
+        flow_map = self.get_flow_map()
+        path = [self.start]
+        while (current := path[-1]) != self.end:
+            neighbors = [
+                (n, flow_map.get_if_in_bounds(n)) for n in current.cardinal_neighbors()
+            ]
+            best_neighbor = min(
+                neighbors, key=lambda it: it[1] if it[1] is not None else sys.maxsize
+            )
+            assert best_neighbor[1] is not None, "Couldn't find path"
+            path.append(best_neighbor[0])
+
+        # don't include the start node
+        path.pop(0)
+
+        return path
+
+    def find_cheats(self, minimum_savings: int = 1) -> CheatsBySavedTime:
+        legit_length = len(self.get_legit_path())
+        max_length = legit_length - minimum_savings
+
+        discovered = dict[tuple[IntVector2, IntVector2], int]()
+        flow_map = self.get_flow_map()
+
         frontier_by_priority: list[tuple[IntVector2, int]] = [(self.start, 0)]
         cost_so_far = dict[IntVector2, int]()
         cost_so_far[self.start] = 0
-        came_from = dict[IntVector2, IntVector2]()
+
+        def add_to_frontier(node: IntVector2, cost: int):
+            if node not in cost_so_far or cost < cost_so_far[node]:
+                cost_so_far[node] = cost
+                priority = cost + n.manhattan_distance(self.end)
+                bisect.insort(
+                    frontier_by_priority, (node, priority), key=lambda it: -it[1]
+                )
+
+        def result():
+            grouped = dict[int, int]()
+            for v in discovered.values():
+                saved_time = legit_length - v
+                grouped.setdefault(saved_time, 0)
+                grouped[saved_time] += 1
+            return grouped
 
         while len(frontier_by_priority) > 0:
             current, _ = frontier_by_priority.pop()
 
-            if current == self.end:
-                path = list[IntVector2]()
-                walkback = self.end
-                while walkback != self.start:
-                    path.append(walkback)
-                    walkback = came_from[walkback]
-                path.reverse()
-                return path
+            if current == self.end or cost_so_far[current] > max_length:
+                # no further cheats are optimal
+                return result()
 
-            for next in current.cardinal_neighbors():
-                if not self.walls.shape.is_in_bounds(next) or self.walls[next]:
-                    continue
+            for n in current.cardinal_neighbors():
                 new_cost = cost_so_far[current] + 1
-                if next not in cost_so_far or new_cost < cost_so_far[next]:
-                    cost_so_far[next] = new_cost
-                    priority = new_cost + next.manhattan_distance(self.end)
-                    bisect.insort(
-                        frontier_by_priority, (next, priority), key=lambda it: -it[1]
-                    )
-                    came_from[next] = current
+                if self.is_passable(n):
+                    add_to_frontier(n, new_cost)
+                elif self.walls.get_if_in_bounds(n):
+                    # it's a wall, that means we can try to cheat through it
+                    cheat_start = n
+                    for cheat_end in cheat_start.cardinal_neighbors():
+                        remaining_cost = flow_map.get_if_in_bounds(cheat_end)
+                        if remaining_cost is not None and cheat_end not in cost_so_far:
+                            total_length = cost_so_far[current] + 2 + remaining_cost
+                            if total_length > max_length:
+                                continue
+                            already_discovered = discovered.get(
+                                (cheat_start, cheat_end)
+                            )
+                            if (
+                                already_discovered is None
+                                or total_length < already_discovered
+                            ):
+                                discovered[(cheat_start, cheat_end)] = total_length
 
-        raise AssertionError("No path found")
-
-    def try_cheat(
-        self, start: IntVector2, end: IntVector2, max_length: int
-    ) -> Cheat | None:
-        frontier_by_priority = list[tuple[IntVector2, int]]([(end, 0)])
-        cost_so_far = dict[IntVector2, int]()
-        cost_so_far[end] = 0
-
-        while len(frontier_by_priority) > 0:
-            current, _ = frontier_by_priority.pop()
-            if cost_so_far[current] > max_length:
-                return None
-
-            if current == self.end:
-                return Cheat(start, end, cost_so_far[current])
-
-            for next in current.cardinal_neighbors():
-                if not self.walls.shape.is_in_bounds(next) or self.walls[next]:
-                    continue
-                new_cost = cost_so_far[current] + 1
-                if next not in cost_so_far or new_cost < cost_so_far[next]:
-                    cost_so_far[next] = new_cost
-                    priority = new_cost + next.manhattan_distance(self.end)
-                    bisect.insort(
-                        frontier_by_priority, (next, priority), key=lambda it: -it[1]
-                    )
-
-        return None
-
-    def find_cheats(self, minimum_savings: int = 1) -> CheatsBySavedTime:
-        result = dict[int, int]()
-        legit_path = self.get_legit_path()
-
-        for length_so_far, position in enumerate(legit_path[:-1]):
-            length_so_far += 1  # path does not include the start node
-            for n in position.cardinal_neighbors():
-                if self.walls.shape.is_in_bounds(n):
-                    expected_length = len(legit_path) - length_so_far
-                    if expected_length < minimum_savings:
-                        continue
-                    cheat = self.try_cheat(
-                        start=position,
-                        end=n,
-                        max_length=expected_length - minimum_savings,
-                    )
-                    if cheat is not None:
-                        time_save = expected_length - (
-                            cheat.path_length + length_so_far
-                        )
-                        if time_save < 0:
-                            # try_cheat's max_length should be catching this
-                            continue
-                        result.setdefault(time_save, 0)
-                        result[time_save] += 1
-
-        return result
+        return result()
 
 
 def part_one_answer(lines: list[str]):
@@ -159,4 +169,6 @@ def part_one_answer(lines: list[str]):
 
 if __name__ == "__main__":
     puzzle_input = aoc_input.load_lines("day20input")
+    # 6837 is too high
     print("Part One:", part_one_answer(puzzle_input))
+    

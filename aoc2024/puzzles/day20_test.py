@@ -1,4 +1,3 @@
-from pytest import skip
 import aoc2024.common.input as aoc_input
 from .day20 import Maze
 
@@ -28,7 +27,6 @@ def test_cheats():
 
 
 def test_minimum_savings():
-    skip()
     maze = Maze.parse(SAMPLE_INPUT)
     assert maze.find_cheats(minimum_savings=20) == {
         20: 1,
