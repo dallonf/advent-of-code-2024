@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from functools import cache
 import sys
-from typing import Iterator, Optional, Sequence, cast
+from typing import Optional, cast
 from aoc2024.common.grid import BasicGrid, IntVector2
 import aoc2024.common.input as aoc_input
 

@@ -69,3 +69,16 @@ def test_long_cheats():
         74: 4,
         76: 3,
     }
+
+
+def test_community_bonus():
+    # https://www.reddit.com/r/adventofcode/comments/1hih8yx/2024_day_20_part_3_your_code_is_too_general_lets/
+    maze = Maze.parse(aoc_input.load_lines("day20community"))
+    assert maze.find_cheats(cheat_length=20, minimum_savings=30) == {
+        30: 66,
+        32: 167,
+        34: 19,
+        36: 39,
+        38: 2,
+        40: 6,
+    }
