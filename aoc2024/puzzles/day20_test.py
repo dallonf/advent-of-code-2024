@@ -12,7 +12,7 @@ def test_legit_path():
 
 def test_get_surrounding():
     result = get_surrounding(IntVector2(0, 0), 1)
-    assert result == set(
+    assert set(result) == set(
         [
             IntVector2(0, 1),
             IntVector2(x=1, y=0),

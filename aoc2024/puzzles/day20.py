@@ -108,7 +108,7 @@ class Maze:
         legit_length = len(self.get_legit_path())
         max_length = legit_length - minimum_savings
 
-        discovered = dict[tuple[IntVector2, IntVector2], int]()
+        results = dict[int, int]()
         flow_map = self.get_flow_map()
 
         frontier_by_priority: list[tuple[IntVector2, int]] = [(self.start, 0)]
@@ -123,20 +123,12 @@ class Maze:
                     frontier_by_priority, (node, priority), key=lambda it: -it[1]
                 )
 
-        def result():
-            grouped = dict[int, int]()
-            for v in discovered.values():
-                saved_time = legit_length - v
-                grouped.setdefault(saved_time, 0)
-                grouped[saved_time] += 1
-            return grouped
-
         while len(frontier_by_priority) > 0:
             current, _ = frontier_by_priority.pop()
 
             if current == self.end or cost_so_far[current] > max_length:
                 # no further cheats are optimal
-                return result()
+                return results
 
             for n in current.cardinal_neighbors():
                 new_cost = cost_so_far[current] + 1
@@ -152,18 +144,19 @@ class Maze:
                         + cheat_end.manhattan_distance(cheat_start)
                         + remaining_cost
                     )
-                    if total_length > max_length:
+                    saved_time = legit_length - total_length
+                    if saved_time < minimum_savings:
                         continue
-                    already_discovered = discovered.get((cheat_start, cheat_end))
-                    if already_discovered is None or total_length < already_discovered:
-                        discovered[(cheat_start, cheat_end)] = total_length
+                    results.setdefault(saved_time, 0)
+                    results[saved_time] += 1
 
-        return result()
+        return results
 
 
-def get_surrounding(coord: IntVector2, steps: int) -> set[IntVector2]:
+@cache
+def get_surrounding_origin(steps: int) -> list[IntVector2]:
     distances = dict[IntVector2, int]()
-    queue = deque[tuple[IntVector2, int]]([(coord, 0)])
+    queue = deque[tuple[IntVector2, int]]([(IntVector2(0, 0), 0)])
 
     while len(queue) > 0:
         current, current_distance = queue.popleft()
@@ -173,8 +166,12 @@ def get_surrounding(coord: IntVector2, steps: int) -> set[IntVector2]:
         distances[current] = current_distance
         queue.extend((n, current_distance + 1) for n in current.cardinal_neighbors())
 
-    distances.pop(coord)  # the start is not surrounding itself
-    return set((k for k, v in distances.items() if v <= steps))
+    distances.pop(IntVector2(0, 0))  # the start is not surrounding itself
+    return [k for k, v in distances.items() if v <= steps]
+
+
+def get_surrounding(coord: IntVector2, steps: int) -> list[IntVector2]:
+    return [coord + it for it in get_surrounding_origin(steps)]
 
 
 def part_one_answer(lines: list[str]):
