@@ -163,12 +163,10 @@ class Maze:
 
 def part_one_answer(lines: list[str]):
     maze = Maze.parse(lines)
-    cheats = maze.find_cheats()
+    cheats = maze.find_cheats(minimum_savings=100)
     return sum(v for v in cheats.values())
 
 
 if __name__ == "__main__":
     puzzle_input = aoc_input.load_lines("day20input")
-    # 6837 is too high
     print("Part One:", part_one_answer(puzzle_input))
-    
