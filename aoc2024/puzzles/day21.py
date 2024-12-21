@@ -140,6 +140,17 @@ def part_one_answer(lines: list[str]) -> int:
     return result
 
 
+def part_two_answer(lines: list[str]) -> int:
+    result = 0
+    for line in lines:
+        length = find_keypad_sequence(line, proxies=25)
+        numeric_code = int(line.replace("A", ""))
+        result += length * numeric_code
+    return result
+
+
 if __name__ == "__main__":
     puzzle_input = aoc_input.load_lines("day21input")
     print("Part One:", part_one_answer(puzzle_input))
+    # Too slow to run
+    # print("Part Two:", part_two_answer(puzzle_input))
