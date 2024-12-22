@@ -1,6 +1,6 @@
 from collections import deque
 from dataclasses import dataclass, replace
-from functools import cached_property
+from functools import cache, cached_property
 from aoc2024.common.grid import Direction, IntVector2
 import aoc2024.common.input as aoc_input
 from aoc2024.common.priority_queue import PriorityQueue
@@ -127,6 +127,30 @@ class PathfindingNode:
         raise AssertionError(f"Unexpected key: {key}")
 
 
+def simulate_keypads(
+    key: str,
+    keypad_positions: tuple[IntVector2, ...],
+    keypads: tuple[Keypad, ...],
+) -> tuple[tuple[IntVector2, ...], str | None]:
+    if len(keypads) == 0:
+        return ((), key)
+
+    direction = key_to_direction(key)
+    if direction is not None:
+        new_position = keypad_positions[0] + direction.to_vector()
+        if keypads[0].is_in_bounds(new_position):
+            return ((new_position,) + keypad_positions[1:], None)
+        else:
+            raise AssertionError("Invalid movement")
+
+    if key == "A":
+        result = keypads[0].press_button(keypad_positions[0])
+        downstream = simulate_keypads(result, keypad_positions[1:], keypads[1:])
+        return ((keypad_positions[0],) + downstream[0], downstream[1])
+
+    raise AssertionError(f"Unexpected key: {key}")
+
+
 def find_keypad_sequence_part_one(target_code: str, proxies: int = 1) -> int:
     keypads = tuple([directional_keypad for _ in range(proxies)] + [numeric_keypad])
     start = PathfindingNode(tuple(IntVector2(0, 0) for _ in keypads))
@@ -152,16 +176,13 @@ def find_keypad_sequence_part_one(target_code: str, proxies: int = 1) -> int:
 
 
 def find_keypad_sequence(target_code: str, proxies: int = 2) -> int:
-    # still working on a Part Two implementation
-    return find_keypad_sequence_part_one(target_code, proxies)
     steps = 0
     position = IntVector2(0, 0)
     for button in target_code:
-        result = steps_to_press_button_detailed(
+        result = steps_to_press_button(
             button, numeric_keypad, position, directional_keypads_above=proxies + 1
         )
-        steps += result[0]
-        print(button, position, result[1])
+        steps += result
         position = numeric_keypad.key_positions[button]
     return steps
 
@@ -177,7 +198,7 @@ def steps_to_press_button(
     )[0]
 
 
-# @cache
+@cache
 def steps_to_press_button_detailed(
     target_button: str,
     keypad: Keypad,
@@ -241,7 +262,16 @@ def steps_to_press_button_detailed(
             )
             if new_node not in cost_so_far or new_cost < cost_so_far[new_node]:
                 cost_so_far[new_node] = new_cost
-                frontier.add(new_node, new_cost)
+                # add the cost of pressing A to the priority
+                # so that it's factored into finding the overall
+                # shortest path
+                priority = new_cost + steps_to_press_button(
+                    "A",
+                    directional_keypad,
+                    new_node.upper_keypad_position,
+                    directional_keypads_above - 1,
+                )
+                frontier.add(new_node, priority)
                 came_from[new_node] = (
                     current,
                     (came_from[current][1] if current in came_from else "")
