@@ -130,23 +130,36 @@ def find_keypad_sequence(target_code: str, proxies: int = 2) -> int:
     steps = 0
     position = IntVector2(0, 0)
     for button in target_code:
-        steps += steps_to_press_button(
+        result = steps_to_press_button_detailed(
             button, numeric_keypad, position, directional_keypads_above=proxies + 1
         )
+        steps += result[0]
+        print(button, position, result[1])
         position = numeric_keypad.key_positions[button]
     return steps
 
 
-@cache
 def steps_to_press_button(
     target_button: str,
     keypad: Keypad,
     current_position: IntVector2,
     directional_keypads_above: int,
 ) -> int:
+    return steps_to_press_button_detailed(
+        target_button, keypad, current_position, directional_keypads_above
+    )[0]
+
+
+# @cache
+def steps_to_press_button_detailed(
+    target_button: str,
+    keypad: Keypad,
+    current_position: IntVector2,
+    directional_keypads_above: int,
+) -> tuple[int, str]:
     if directional_keypads_above == 0:
         # this is the direct keypad interface
-        return 1
+        return (1, target_button)
 
     @dataclass(frozen=True)
     class Node:
@@ -156,13 +169,28 @@ def steps_to_press_button(
     start = Node(current_position, IntVector2(0, 0))
     frontier = PriorityQueue(start)
     cost_so_far: dict[Node, int] = {start: 0}
+    came_from = dict[Node, tuple[Node, str]]()
     while (current := frontier.pop()) is not None:
         if keypad.keys[current.keypad_position] == target_button:
-            return cost_so_far[current] + steps_to_press_button(
+            buttons = list[str]()
+            walkback = current
+            while walkback != start:
+                walkback, button = came_from[walkback]
+                buttons.append(button)
+            buttons.reverse()
+
+            path = came_from[current][1] if current in came_from else ""
+
+            steps_to_press_a = steps_to_press_button_detailed(
                 "A",
                 directional_keypad,
                 current.upper_keypad_position,
                 directional_keypads_above - 1,
+            )
+
+            return (
+                cost_so_far[current] + steps_to_press_a[0],
+                path + steps_to_press_a[1],
             )
 
         for direction in Direction:
@@ -170,12 +198,14 @@ def steps_to_press_button(
             if not keypad.is_in_bounds(n):
                 continue
 
-            new_cost = cost_so_far[current] + steps_to_press_button(
+            path = steps_to_press_button_detailed(
                 direction_to_key(direction),
                 directional_keypad,
                 current.upper_keypad_position,
                 directional_keypads_above - 1,
             )
+
+            new_cost = cost_so_far[current] + path[0]
             new_node = Node(
                 keypad_position=n,
                 upper_keypad_position=directional_keypad.key_positions[
@@ -185,7 +215,12 @@ def steps_to_press_button(
             if new_node not in cost_so_far or new_cost < cost_so_far[new_node]:
                 cost_so_far[new_node] = new_cost
                 frontier.add(new_node, new_cost)
-    return 0
+                came_from[new_node] = (
+                    current,
+                    (came_from[current][1] if current in came_from else "")
+                    + "".join(path[1]),
+                )
+    raise AssertionError("path not found")
 
 
 def part_one_answer(lines: list[str]) -> int:
@@ -210,4 +245,4 @@ if __name__ == "__main__":
     puzzle_input = aoc_input.load_lines("day21input")
     print("Part One:", part_one_answer(puzzle_input))
     # Too slow to run
-    print("Part Two:", part_two_answer(puzzle_input))
+    # print("Part Two:", part_two_answer(puzzle_input))
