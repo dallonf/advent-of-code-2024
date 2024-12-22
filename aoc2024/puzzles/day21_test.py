@@ -1,4 +1,3 @@
-from pytest import skip
 from aoc2024.common.grid import IntVector2
 from .day21 import (
     find_keypad_sequence,
@@ -31,7 +30,6 @@ def test_others():
 
 
 def test_part_one_answer():
-    skip()
     assert (
         part_one_answer(
             [

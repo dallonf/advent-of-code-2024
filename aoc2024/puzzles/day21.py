@@ -1,5 +1,6 @@
+from collections import deque
 from dataclasses import dataclass, replace
-from functools import cache, cached_property
+from functools import cached_property
 from aoc2024.common.grid import Direction, IntVector2
 import aoc2024.common.input as aoc_input
 from aoc2024.common.priority_queue import PriorityQueue
@@ -126,7 +127,33 @@ class PathfindingNode:
         raise AssertionError(f"Unexpected key: {key}")
 
 
+def find_keypad_sequence_part_one(target_code: str, proxies: int = 1) -> int:
+    keypads = tuple([directional_keypad for _ in range(proxies)] + [numeric_keypad])
+    start = PathfindingNode(tuple(IntVector2(0, 0) for _ in keypads))
+    frontier = deque[PathfindingNode]([start])
+    steps_so_far: dict[PathfindingNode, int] = {start: 0}
+
+    while len(frontier) > 0:
+        current = frontier.popleft()
+        if current.keys_entered == len(target_code):
+            return steps_so_far[current]
+
+        next_steps = steps_so_far[current] + 1
+        expected_output = target_code[current.keys_entered]
+        for next_input in ("^", "<", ">", "v", "A"):
+            next_node = current.input(
+                next_input, keypads, expected_output=expected_output
+            )
+            if next_node is not None and next_node not in steps_so_far:
+                frontier.append(next_node)
+                steps_so_far[next_node] = next_steps
+
+    raise AssertionError("Sequence not found")
+
+
 def find_keypad_sequence(target_code: str, proxies: int = 2) -> int:
+    # still working on a Part Two implementation
+    return find_keypad_sequence_part_one(target_code, proxies)
     steps = 0
     position = IntVector2(0, 0)
     for button in target_code:
