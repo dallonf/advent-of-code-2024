@@ -81,3 +81,6 @@ def test_steps_to_press_button_no_proxies():
         )
         == 4
     )
+
+def test_25_proxies():
+    assert find_keypad_sequence("029A", proxies=25) == 82050061710
