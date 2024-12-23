@@ -49,12 +49,47 @@ class NetworkConnections:
 
         return result
 
+    def find_largest_cluster(self) -> frozenset[str]:
+        current_best: frozenset[str] | None = None
+        queue = deque[tuple[str, ...]]([(node,) for node in self.connections.keys()])
+        explored = set[frozenset[str]]()
+        while len(queue) > 0:
+            current = queue.popleft()
+            combination = frozenset(current)
+            explored.add(frozenset(current))
+
+            if current_best is None or len(current) > len(current_best):
+                current_best = combination
+
+            for n in self.connections[current[-1]]:
+                if n in current:
+                    # don't add a node already in the cluster
+                    continue
+                if frozenset(current + (n,)) in explored:
+                    # we've already explored this cluster
+                    continue
+                if not all(n in self.connections[existing] for existing in current):
+                    # the new node must be connected to all nodes already in the cluster
+                    continue
+                queue.appendleft(current + (n,))
+        assert current_best is not None, "No cluster found"
+        return current_best
+
 
 def part_one_answer(lines: list[str]) -> int:
     connections = NetworkConnections.parse(lines)
     return len(connections.find_all_historian_triads())
 
 
+def part_two_answer(lines: list[str]) -> str:
+    connections = NetworkConnections.parse(lines)
+    cluster = connections.find_largest_cluster()
+    nodes = list(cluster)
+    nodes.sort()
+    return ",".join(nodes)
+
+
 if __name__ == "__main__":
     puzzle_input = aoc_input.load_lines("day23input")
     print("Part One:", part_one_answer(puzzle_input))
+    print("Part Two:", part_two_answer(puzzle_input))
