@@ -52,7 +52,7 @@ class Gate:
 
 
 class Device:
-    def __init__(self, wires: dict[str, bool], gates: list[Gate]):
+    def __init__(self, wires: dict[str, bool], gates: dict[str, Gate]):
         self.wires = wires
         self.gates = gates
 
@@ -66,14 +66,15 @@ class Device:
             value = value == "1"
             wires[label] = value
 
-        gates = [Gate.parse(l) for l in lines[split + 1 :]]
+        gates = (Gate.parse(l) for l in lines[split + 1 :])
+        gates = {g.output: g for g in gates}
 
         return Device(wires, gates)
 
     def simulate(self):
         while True:
             updated_any = False
-            for g in self.gates:
+            for g in self.gates.values():
                 if (
                     not g.output in self.wires
                     and g.a_input in self.wires
