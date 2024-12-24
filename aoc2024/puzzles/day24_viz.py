@@ -8,7 +8,7 @@ if __name__ == "__main__":
     # mermaid diagrams
     print("flowchart TD")
     for i, gate in enumerate(device.gates):
-        print(f'g{i}("{gate.gate_type.name}")')
+        print(f'g{i}{'{'}"{gate.gate_type.name}"{'}'}')
         print(f"{gate.a_input} --> g{i}")
         print(f"{gate.b_input} --> g{i}")
         print(f"g{i} --> {gate.output}")
