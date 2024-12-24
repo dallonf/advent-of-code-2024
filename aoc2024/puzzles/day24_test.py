@@ -37,3 +37,23 @@ def test_output():
 
 def test_part_one_answer():
     assert part_one_answer(SAMPLE_INPUT) == 2024
+
+
+def test_fill_x():
+    device = Device.parse(SMALL_INPUT)
+    device.fill_x(0)
+    assert device.wires["x00"] == False
+    assert device.wires["x01"] == False
+    assert device.wires["x02"] == False
+    device.fill_x(1)
+    assert device.wires["x00"] == True
+    assert device.wires["x01"] == False
+    assert device.wires["x02"] == False
+    device.fill_x(2)
+    assert device.wires["x00"] == False
+    assert device.wires["x01"] == True
+    assert device.wires["x02"] == False
+    device.fill_x(3)
+    assert device.wires["x00"] == True
+    assert device.wires["x01"] == True
+    assert device.wires["x02"] == False

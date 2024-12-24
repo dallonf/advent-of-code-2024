@@ -52,7 +52,6 @@ class Gate:
 
 
 class Device:
-
     def __init__(self, wires: dict[str, bool], gates: list[Gate]):
         self.wires = wires
         self.gates = gates
@@ -102,6 +101,29 @@ class Device:
             place *= 2
 
         return output
+
+    def copy(self) -> "Device":
+        return Device(self.wires.copy(), self.gates.copy())
+
+    def fill_x(self, x_value: int):
+        self.fill_input("x", x_value)
+
+    def fill_y(self, y_value: int):
+        self.fill_input("y", y_value)
+
+    def fill_input(self, input_prefix: str, value: int):
+        keys = [k for k in self.wires.keys() if k.startswith(input_prefix)]
+        keys.sort()
+        max_value = pow(2, len(keys)) - 1
+        assert value <= max_value
+
+        place = 1
+        for i, k in enumerate(keys):
+            # make sure the outputs are numbered
+            assert int(k.removeprefix(input_prefix)) == i
+            is_bit_active = value >> i & 1 == 1
+            self.wires[k] = is_bit_active
+            place *= 2
 
 
 def part_one_answer(lines: list[str]) -> int:
