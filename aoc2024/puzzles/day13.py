@@ -44,19 +44,18 @@ class Machine:
         return Machine(button_a=button_a, button_b=button_b, prize=prize)
 
     def get_optimal_presses(self) -> OptimalPresses | None:
-        max_a_presses = min(
-            self.prize.x // self.button_a.x, self.prize.y // self.button_a.y
-        )
-        for a in range(max_a_presses + 1):
-            a_position = self.button_a * a
-            remaining = self.prize - a_position
-            if remaining.x % self.button_b.x != 0:
-                # no amount of B presses will help
-                continue
-            b = remaining.x // self.button_b.x
-            if a_position + self.button_b * b == self.prize:
-                return OptimalPresses(a, b)
-        return None
+        # don't ask me to explain how this works, I used ChatGPT lol
+        det = self.button_a.x * self.button_b.y - self.button_a.y * self.button_b.x
+        if det == 0:
+            return None
+        a_wip = self.button_b.y * self.prize.x - self.button_b.x * self.prize.y
+        b_wip = -self.button_a.y * self.prize.x + self.button_a.x * self.prize.y
+
+        if a_wip % det != 0 or b_wip % det != 0:
+            # the answer won't be an integer
+            return None
+
+        return OptimalPresses(a_wip // det, b_wip // det)
 
     def corrected(self) -> "Machine":
         offset = 10_000_000_000_000
@@ -77,6 +76,14 @@ def part_one_answer(lines: list[str]) -> int:
     return sum(costs)
 
 
+def part_two_answer(lines: list[str]) -> int:
+    machines = parse_all(lines)
+    results = (m.corrected().get_optimal_presses() for m in machines)
+    costs = (o.cost for o in results if o is not None)
+    return sum(costs)
+
+
 if __name__ == "__main__":
     puzzle_input = aoc_input.load_lines("day13input")
     print("Part One:", part_one_answer(puzzle_input))
+    print("Part Two:", part_two_answer(puzzle_input))
