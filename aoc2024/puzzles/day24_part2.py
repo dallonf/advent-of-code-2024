@@ -10,8 +10,73 @@ class Anomaly:
     message: str
 
 
+def validate_carry_bit(device: Device, wire: str, from_bit: int) -> list[Anomaly]:
+    anomalies = list[Anomaly]()
+    gate = device.gates[wire]
+    if gate.gate_type != GateType.Or:
+        anomalies.append(Anomaly(from_bit, (wire,), f"Expected OR gate (was {gate})"))
+        return anomalies
+
+    def is_first_gate(wire: str):
+        test_gate = device.gates[wire]
+        return test_gate.gate_type == GateType.And and sorted(
+            [test_gate.a_input, test_gate.b_input]
+        ) == [wire_name("x", from_bit), wire_name("y", from_bit)]
+
+    second_gate = None
+    if is_first_gate(gate.a_input):
+        second_gate = device.gates[gate.b_input]
+    elif is_first_gate(gate.b_input):
+        second_gate = device.gates[gate.a_input]
+    else:
+        anomalies.append(
+            Anomaly(
+                from_bit,
+                (gate.a_input, gate.b_input),
+                f"Couldn't find a required gate in carry structure (expected AND({wire_name("x", from_bit)}, {wire_name("y", from_bit)}))",
+            )
+        )
+        return anomalies
+
+    if second_gate.gate_type != GateType.And:
+        anomalies.append(
+            Anomaly(
+                from_bit,
+                (second_gate.output,),
+                f"Expected second gate in carry structure to be AND (was {second_gate})",
+            )
+        )
+        return anomalies
+
+    # prev_carry = None
+
+    def is_third_gate(wire: str):
+        test_gate = device.gates[wire]
+        return test_gate.gate_type == GateType.Xor and sorted(
+            [test_gate.a_input, test_gate.b_input]
+        ) == [wire_name("x", from_bit), wire_name("y", from_bit)]
+
+    if is_third_gate(second_gate.a_input):
+        pass
+        # prev_carry = device.gates[gate.b_input]
+    elif is_third_gate(second_gate.b_input):
+        pass
+        # prev_carry = device.gates[gate.a_input]
+    else:
+        anomalies.append(
+            Anomaly(
+                from_bit,
+                (gate.a_input, gate.b_input),
+                f'Couldn\'t find a required gate ("third") in carry structure (expected XOR({wire_name("x", from_bit)}, {wire_name("y", from_bit)}))',
+            )
+        )
+        return anomalies
+
+    return anomalies  # + validate_carry_bit(device, prev_carry.output, from_bit - 1)
+
+
 def validate_adder_bit(device: Device, bit: int):
-    output_wire = "z" + str(bit).rjust(2, "0")
+    output_wire = wire_name("z", bit)
     output_gate = device.gates[output_wire]
     if output_gate.gate_type != GateType.Xor:
         return [
@@ -27,14 +92,34 @@ def validate_adder_bit(device: Device, bit: int):
     half_adder_bit = next((i for i in input_gates if i.gate_type == GateType.Xor), None)
     carry_bit = next((i for i in input_gates if i.gate_type == GateType.Or), None)
     anomalies = list[Anomaly]()
-    if half_adder_bit is None:
-        anomalies.append(Anomaly(bit, tuple(inputs), "Couldn't find a carry bit (OR)"))
     if carry_bit is None:
+        anomalies.append(Anomaly(bit, tuple(inputs), "Couldn't find a carry bit (OR)"))
+    else:
+        anomalies.extend(validate_carry_bit(device, carry_bit.output, bit - 1))
+
+    if half_adder_bit is None:
         anomalies.append(
             Anomaly(bit, tuple(inputs), "Couldn't find a half-adder bit (XOR)")
         )
+    else:
+        half_adder_inputs = [half_adder_bit.a_input, half_adder_bit.b_input]
+        half_adder_inputs.sort()
+        expected_half_adder_inputs = [wire_name("x", bit), wire_name("y", bit)]
+        if half_adder_inputs != expected_half_adder_inputs:
+            anomalies.append(
+                Anomaly(
+                    bit,
+                    tuple(
+                        half_adder_inputs,
+                    ),
+                    f"Half-adder inputs should have been {expected_half_adder_inputs}",
+                )
+            )
     return anomalies
-    # TODO: verify the inputs of those gates
+
+
+def wire_name(prefix: str, bit: int):
+    return prefix + str(bit).rjust(2, "0")
 
 
 def main():

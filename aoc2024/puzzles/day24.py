@@ -136,3 +136,4 @@ def part_one_answer(lines: list[str]) -> int:
 if __name__ == "__main__":
     puzzle_input = aoc_input.load_lines("day24input")
     print("Part One:", part_one_answer(puzzle_input))
+    print("Also see day24_part2")
